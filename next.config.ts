@@ -5,10 +5,8 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['nyuvivzufmaxafniqsxu.supabase.co']
   },
-  experimental: {
-    turbo: {
-      root: process.cwd() // Set the root directory for Turbopack to the current working directory
-    }
+  turbopack: {
+    root: process.cwd()
   }
 };
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 const Navbar = () => {
 
   return (
-    <>
+    <div className="flex items-center gap-10">
       {/* Logo */}
       <Link href="/" className="text-2xl font-bold text-primary-600">
         EventPlatform
@@ -33,7 +33,7 @@ const Navbar = () => {
           Konser
         </Link>
       </nav>
-    </>
+    </div>
   )
 }
 

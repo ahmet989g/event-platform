@@ -1,16 +1,13 @@
 import ListPage from "@/components/pages/eventListsByCategory/ListPage";
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     category: string; // slug
-  };
+  }>;
 }
 
-export const revalidate = 300;
-export const fetchCache = 'default-cache';
-
-export function generateMetadata({ params }: CategoryPageProps) {
-  const { category } = params;
+export async function generateMetadata({ params }: CategoryPageProps) {
+  const { category } = await params;
 
   const categoryNames: Record<string, string> = {
     'spor': 'Spor',
@@ -27,8 +24,8 @@ export function generateMetadata({ params }: CategoryPageProps) {
   };
 }
 
-const EventsList = ({ params }: CategoryPageProps) => {
-  const { category } = params;
+const EventsList = async ({ params }: CategoryPageProps) => {
+  const { category } = await params;
 
   if (!category) {
     throw new Error('Category is required');

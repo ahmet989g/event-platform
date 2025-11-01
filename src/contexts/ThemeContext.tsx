@@ -1,6 +1,5 @@
 "use client";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { useLocalStorage } from "../lib/hooks/useLocalStorage";
 
 type Theme = "light" | "dark";
 
@@ -12,7 +11,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useLocalStorage<Theme>("theme", "light");
+  const [theme, setTheme] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
   // Hydration hatalarını önlemek için
@@ -31,6 +30,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!mounted) return;
+
+    // LocalStorage'a tema tercihini kaydet
+    window.localStorage.setItem("theme", theme);
 
     // HTML elementine tema sınıfını uygula
     const root = document.documentElement;

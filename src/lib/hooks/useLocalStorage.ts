@@ -23,8 +23,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     }
 
     try {
-      // Değer obje ise JSON'a çevir
-      const valueToStore = typeof storedValue === "object" ? JSON.stringify(storedValue) : storedValue;
+      const valueToStore = JSON.stringify(storedValue);
       window.localStorage.setItem(key, valueToStore);
     } catch (error) {
       console.error(error);
