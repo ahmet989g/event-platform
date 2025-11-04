@@ -47,7 +47,7 @@ const HomeSlider = () => {
               />
               <div className="absolute inset-0 flex flex-col justify-center items-center text-white bg-black/20 bg-opacity-20 rounded-xl">
                 <h2 className="text-2xl font-semibold">{item.text}</h2>
-                <Link href={item.link} className="mt-2 px-4 py-2 bg-primary-500 rounded-full">Detaylar</Link>
+                <Link href={item.link} className="mt-2 px-4 py-2 bg-primary hover:bg-secondary transition-colors rounded-full">Detaylar</Link>
               </div>
             </div>
           </SwiperSlide>

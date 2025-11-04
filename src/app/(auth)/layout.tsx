@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center">
-          <Link href="/" className="text-3xl font-bold text-primary-600">
+          <Link href="/" className="text-3xl font-bold text-primary">
             EventPlatform
           </Link>
         </div>

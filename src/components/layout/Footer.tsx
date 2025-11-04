@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Hakkında */}
           <div>
             <h3 className="mb-4 text-lg font-semibold">EventPlatform</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm">
               Türkiye&apos;nin en kapsamlı etkinlik biletleme platformu.
             </p>
           </div>
@@ -20,7 +20,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/tiyatro"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   Tiyatro
                 </Link>
@@ -28,7 +28,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/konser"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   Konser
                 </Link>
@@ -36,7 +36,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/spor"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   Spor
                 </Link>
@@ -51,7 +51,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/hakkimizda"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   Hakkımızda
                 </Link>
@@ -59,7 +59,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/iletisim"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   İletişim
                 </Link>
@@ -74,7 +74,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/sss"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   Sıkça Sorulan Sorular
                 </Link>
@@ -82,7 +82,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/iptal-iade"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400"
+                  className="hover:text-primary"
                 >
                   İptal ve İade
                 </Link>
@@ -92,7 +92,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-8 border-t border-gray-200 pt-8 text-center text-sm text-gray-600 dark:border-gray-800 dark:text-gray-400">
+        <div className="mt-8 border-t border-gray-200 pt-8 text-center text-sm dark:border-gray-800">
           ©  EventPlatform. Tüm hakları saklıdır.
         </div>
       </div>

@@ -47,7 +47,7 @@ const ForgotPassword = () => {
             name="email"
             required
             disabled={isPending}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.email && (
             <p className="mt-1 text-sm text-red-600">{state.errors.email[0]}</p>
@@ -57,7 +57,7 @@ const ForgotPassword = () => {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full cursor-pointer rounded-lg bg-primary-600 px-4 py-3 font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full cursor-pointer rounded-lg bg-primary px-4 py-3 font-medium text-white transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Giriş yapılıyor..." : "Sıfırlama E-postası Gönder"}
         </button>
@@ -67,7 +67,7 @@ const ForgotPassword = () => {
         Şifreni hatırladın mı?{" "}
         <Link
           href="/login"
-          className="font-medium text-primary-600 hover:text-primary-500"
+          className="font-medium text-primary hover:text-secondary"
         >
           Giriş Yap
         </Link>

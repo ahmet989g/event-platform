@@ -6,8 +6,21 @@
 /* ===========================
    🎨 THEME CONFIGURATION
    =========================== */
+
+   /*
+    * #222831 (çok koyu gri/siyah tonları)
+    * #393e46 (koyu gri tonları)
+    * #00adb5 (turkuaz tonları)
+    * #eeeeee (açık gri/beyaz tonları)
+    */
 @theme {
   /* 🎟️ Biletleme sitesi renk paleti */
+
+  --color-primary: #00ADB5;
+  --color-secondary: #222831;
+  --color-success: #10b981;
+  --color-info: #3b82f6;
+  --color-error: #ef4444;
 
   /* Primary – ana butonlar, linkler */
   --color-primary-50: #eff6ff;
@@ -15,7 +28,7 @@
   --color-primary-200: #bfdbfe;
   --color-primary-300: #93c5fd;
   --color-primary-400: #60a5fa;
-  --color-primary-500: #0056ff; /* Updated for brand consistency */
+  --color-primary-500: #00ADB5; /* Updated for brand consistency */
   --color-primary-600: #004ae6;
   --color-primary-700: #003bbd;
   --color-primary-800: #002c94;
@@ -27,7 +40,7 @@
   --color-secondary-200: #a7f3d0;
   --color-secondary-300: #6ee7b7;
   --color-secondary-400: #34d399;
-  --color-secondary-500: #00c2a3;
+  --color-secondary-500: #70B2B2;
   --color-secondary-600: #00a58c;
   --color-secondary-700: #008874;
   --color-secondary-800: #006b5d;
@@ -59,7 +72,7 @@
   :root {
     --surface: #ffffff;       /* Ana yüzey */
     --background: #f5f7fa;    /* Genel arka plan */
-    --foreground: #1f2937;    /* Metin rengi (ana) */
+    --foreground: #222831;    /* Metin rengi (ana) */
     --foreground-secondary: #4b5563; /* Yardımcı metin */
     --border-color: #e5e7eb;  /* Çizgiler / kenarlar */
   }
@@ -68,7 +81,7 @@
   :root:where(.dark, .dark *) {
     --surface: #111827;
     --background: #1e293b;
-    --foreground: #f9fafb;
+    --foreground: #eeeeee;
     --foreground-secondary: #9ca3af;
     --border-color: #334155;
   }

@@ -46,7 +46,7 @@ const EventCard = ({
         {/* Content */}
         <div className="mt-3 space-y-1">
           <h3
-            className="text-lg font-semibold line-clamp-2 group-hover:text-primary-500 transition-colors duration-300 dark:text-gray-100"
+            className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300 dark:text-gray-100"
             title={event.title}
           >
             {event.title}

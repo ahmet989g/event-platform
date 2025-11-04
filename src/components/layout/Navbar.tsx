@@ -5,7 +5,7 @@ const Navbar = () => {
   return (
     <div className="flex items-center gap-10">
       {/* Logo */}
-      <Link href="/" className="text-2xl font-bold text-primary-600">
+      <Link href="/" className="text-2xl font-bold text-primary">
         EventPlatform
       </Link>
 
@@ -14,21 +14,21 @@ const Navbar = () => {
         <Link
           href="/tiyatro"
           prefetch={true}
-          className="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+          className="hover:text-primary"
         >
           Tiyatro
         </Link>
         <Link
           href="/spor"
           prefetch={true}
-          className="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+          className="hover:text-primary"
         >
           Spor
         </Link>
         <Link
           href="/konser"
           prefetch={true}
-          className="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+          className="hover:text-primary"
         >
           Konser
         </Link>

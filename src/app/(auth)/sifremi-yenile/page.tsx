@@ -39,7 +39,7 @@ const UpdatePassword = () => {
             name="new_password"
             required
             disabled={isPending}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.password && (
             <p className="mt-1 text-sm text-red-600">{state.errors.password[0]}</p>
@@ -55,7 +55,7 @@ const UpdatePassword = () => {
             name="confirm_new_password"
             required
             disabled={isPending}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.confirmPassword && (
             <p className="mt-1 text-sm text-red-600">{state.errors.confirmPassword[0]}</p>
@@ -65,7 +65,7 @@ const UpdatePassword = () => {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full cursor-pointer rounded-lg bg-primary-600 px-4 py-3 font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full cursor-pointer rounded-lg bg-primary px-4 py-3 font-medium text-white transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Kaydediliyor..." : "Şifremi Yenile"}
         </button>

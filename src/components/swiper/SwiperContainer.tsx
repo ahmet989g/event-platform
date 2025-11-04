@@ -71,8 +71,8 @@ const SwiperContainer: FC<SwiperContainerType> = ({
               <span
                 key={i}
                 className={`block h-2 rounded-full transition-all duration-500 ${i === activeIndex
-                  ? "w-8 bg-primary-500 opacity-100"
-                  : "w-3 bg-primary-500/40 opacity-50 hover:opacity-80"
+                  ? "w-8 bg-primary opacity-100"
+                  : "w-3 bg-primary/40 opacity-50 hover:opacity-80"
                   }`}
               />
             ))}

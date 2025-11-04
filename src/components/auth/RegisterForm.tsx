@@ -40,7 +40,7 @@ const RegisterForm = () => {
         {/* İsim Soyisim */}
         <div>
           <label htmlFor="first_name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Ad</label>
-          <input type="text" id="first_name" name="first_name" className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+          <input type="text" id="first_name" name="first_name" className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
           {state?.errors?.first_name && (
             <p className="mt-1 text-sm text-red-600">{state.errors.first_name[0]}</p>
           )}
@@ -58,7 +58,7 @@ const RegisterForm = () => {
             type="text"
             id="last_name"
             name="last_name"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.last_name && (
             <p className="mt-1 text-sm text-red-600">{state.errors.last_name[0]}</p>
@@ -78,7 +78,7 @@ const RegisterForm = () => {
             id="email"
             name="email"
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.email && (
             <p className="mt-1 text-sm text-red-600">{state.errors.email[0]}</p>
@@ -98,7 +98,7 @@ const RegisterForm = () => {
             id="password"
             name="password"
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.password && (
             <p className="mt-1 text-sm text-red-600">{state.errors.password[0]}</p>
@@ -118,7 +118,7 @@ const RegisterForm = () => {
             id="confirmPassword"
             name="confirmPassword"
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {state?.errors?.confirmPassword && (
             <p className="mt-1 text-sm text-red-600">
@@ -131,7 +131,7 @@ const RegisterForm = () => {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-primary-600 px-4 py-3 font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-primary px-4 py-3 font-medium text-white transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Kayıt yapılıyor..." : "Kayıt Ol"}
         </button>

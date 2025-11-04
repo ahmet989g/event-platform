@@ -24,7 +24,7 @@ const EventsSection = async () => {
           className="mb-12 first:mt-12 last:mb-0"
         >
           <header className="mb-6">
-            <h2 className="text-3xl font-bold text-primary-500 dark:text-primary-400">
+            <h2 className="text-3xl font-bold text-primary">
               {item.category.name}
             </h2>
             {item.category.description && (

@@ -24,7 +24,7 @@ export function AuthButton() {
         <div className="flex items-center gap-3">
           <Link
             href="/profilim"
-            className="text-sm font-medium text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+            className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary"
           >
             {user.first_name && user.last_name
               ? `${user.first_name} ${user.last_name}`
@@ -42,7 +42,7 @@ export function AuthButton() {
           </Link>
           <Link
             href="/uye-ol"
-            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-secondary transition"
           >
             Kayıt Ol
           </Link>
