@@ -63,14 +63,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   // Event data çek
   const event = await getEventBySlug(eventSlug);
 
-  console.log("Event Detail Page - event:", event);
-
   // Event bulunamadıysa 404
   if (!event) {
     notFound();
   }
 
-  // Sessions data çek
+  // Sessions data çek (venue ve price bilgileriyle)
   const sessions = await getSessionsByEvent(event.id, {
     status: 'on_sale', // Sadece satışta olanlar
   });
@@ -81,10 +79,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       <StructuredData event={event} sessions={sessions || []} />
 
       <div className="container mx-auto !px-0 py-12">
-        {/* Event Header */}
+        {/* Event Header - Modern Hero Section */}
         <EventHeader event={event} />
 
-        {/* Sessions List */}
+        {/* Sessions List - Premium Grid Layout */}
         <SessionsList
           sessions={sessions || []}
           eventSlug={eventSlug}

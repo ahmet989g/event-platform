@@ -13,103 +13,130 @@ interface EventHeaderProps {
 
 export default function EventHeader({ event }: EventHeaderProps) {
   return (
-    <div className="mb-12">
-      <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
-        {/* Event Poster */}
-        <div className="relative aspect-[9/13] overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
-          <Image
-            src={event.poster_url}
-            alt={`${event.title} etkinlik afişi`}
-            fill
-            priority
-            quality={90}
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 400px"
-          />
+    <section className="mb-20">
+      <div className="grid gap-12 lg:grid-cols-[350px_1fr] xl:grid-cols-[400px_1fr]">
+        {/* Event Poster - Simple & Clean */}
+        <div className="group relative">
+          <div className="relative aspect-[9/13] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
+            <Image
+              src={event.poster_url}
+              alt={`${event.title} etkinlik afişi`}
+              fill
+              priority
+              quality={90}
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              sizes="(max-width: 1024px) 100vw, 450px"
+            />
+          </div>
         </div>
 
-        {/* Event Info */}
-        <div className="flex flex-col">
-          {/* Kategori Badge */}
-          <div className="mb-4">
-            <span className="inline-block rounded-full bg-primary-100 px-4 py-1.5 text-sm font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
+        {/* Event Info - Typography Focused */}
+        <div className="flex flex-col justify-center space-y-8">
+          {/* Category - Simple Text */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium uppercase tracking-wider">
               {event.category.name}
             </span>
+            {event.is_featured && (
+              <>
+                <span className="text-gray-300 dark:text-gray-700">•</span>
+                <span className="text-sm font-medium uppercase tracking-wider text-primary">
+                  Öne Çıkan
+                </span>
+              </>
+            )}
           </div>
 
-          {/* Başlık */}
-          <h1 className="mb-4 text-4xl font-bold leading-tight text-primary dark:text-white lg:text-5xl">
+          {/* Title - Large & Bold */}
+          <h1 className="text-3xl font-bold leading-[1.1] tracking-tight text-gray-900 dark:text-white lg:text-4xl xl:text-5xl">
             {event.title}
           </h1>
 
-          {/* Event Tarihi */}
-          {event.event_start_date && (
-            <div className="mb-6 flex items-center gap-2 text-lg">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span>{formatDate(event.event_start_date)} tarihinden itibaren</span>
-            </div>
-          )}
-
-          {/* Açıklama */}
+          {/* Description - Clean Paragraph */}
           {event.description && (
-            <p className="text-lg leading-relaxed">
+            <p className="text-xl leading-relaxed text-gray-600 dark:text-gray-400">
               {event.description}
             </p>
           )}
 
-          {/* Yaş Sınırlaması */}
-          {event.age_restriction && (
-            <div className="mt-6 inline-flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+          {/* Info Grid - Minimal */}
+          <div className="space-y-4 pt-4">
+            {event.event_start_date && (
+              <div className="flex items-center gap-4">
+                <svg
+                  className="h-5 w-5 flex-shrink-0 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                   strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <span>Yaş Sınırı: {event.age_restriction}</span>
-            </div>
-          )}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span className="text-base text-gray-700 dark:text-gray-300">
+                  {formatDate(event.event_start_date)} tarihinden itibaren
+                </span>
+              </div>
+            )}
 
-          {/* Süre (varsa) */}
-          {event.duration_minutes && (
-            <div className="mt-4 flex items-center gap-2">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            {event.duration_minutes && (
+              <div className="flex items-center gap-4">
+                <svg
+                  className="h-5 w-5 flex-shrink-0 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                   strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-base text-gray-700 dark:text-gray-300">
+                  {event.duration_minutes} dakika
+                </span>
+              </div>
+            )}
+
+            {event.age_restriction && (
+              <div className="flex items-center gap-4">
+                <svg
+                  className="h-5 w-5 flex-shrink-0 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-base text-gray-700 dark:text-gray-300">
+                  Yaş sınırı: {event.age_restriction}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* View Count - Subtle */}
+          {event.view_count > 0 && (
+            <div className="flex items-center gap-2 pt-4 text-sm text-gray-500 dark:text-gray-500">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              <span>Süre: {event.duration_minutes} dakika</span>
+              <span>{event.view_count.toLocaleString('tr-TR')} görüntülenme</span>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -11,11 +11,11 @@ interface StructuredDataProps {
     venue?: {
       id: string;
       name: string;
-      address: string;
       city: string;
       district: string | null;
-      latitude: string | null;
-      longitude: string | null;
+      address?: string;
+      latitude?: string | null;
+      longitude?: string | null;
     } | null;
   })[];
 }
@@ -23,6 +23,9 @@ interface StructuredDataProps {
 /**
  * Event Structured Data
  * Schema.org Event type
+ * 
+ * UPDATED: Venue type artık optional fields içeriyor (address, latitude, longitude)
+ * Query'de sadece minimal bilgi çekiliyorsa da çalışır.
  */
 export default function StructuredData({ event, sessions = [] }: StructuredDataProps) {
   // Ana event schema
@@ -40,18 +43,21 @@ export default function StructuredData({ event, sessions = [] }: StructuredDataP
       startDate: `${sessions[0].session_date}T${sessions[0].session_time}`,
     }),
 
-    // Mekan bilgisi (ilk session'dan)
+    // Mekan bilgisi (ilk session'dan) - optional fields kontrol edilir
     ...(sessions.length > 0 && sessions[0].venue && {
       location: {
         '@type': 'Place',
         name: sessions[0].venue.name,
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: sessions[0].venue.address,
-          addressLocality: sessions[0].venue.district || sessions[0].venue.city,
-          addressRegion: sessions[0].venue.city,
-          addressCountry: 'TR',
-        },
+        ...(sessions[0].venue.address && {
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: sessions[0].venue.address,
+            addressLocality: sessions[0].venue.district || sessions[0].venue.city,
+            addressRegion: sessions[0].venue.city,
+            addressCountry: 'TR',
+          },
+        }),
+        // Latitude/longitude sadece varsa ekle
         ...(sessions[0].venue.latitude && sessions[0].venue.longitude && {
           geo: {
             '@type': 'GeoCoordinates',
@@ -79,13 +85,15 @@ export default function StructuredData({ event, sessions = [] }: StructuredDataP
           location: {
             '@type': 'Place',
             name: session.venue.name,
-            address: {
-              '@type': 'PostalAddress',
-              streetAddress: session.venue.address,
-              addressLocality: session.venue.district || session.venue.city,
-              addressRegion: session.venue.city,
-              addressCountry: 'TR',
-            },
+            ...(session.venue.address && {
+              address: {
+                '@type': 'PostalAddress',
+                streetAddress: session.venue.address,
+                addressLocality: session.venue.district || session.venue.city,
+                addressRegion: session.venue.city,
+                addressCountry: 'TR',
+              },
+            }),
           },
         }),
         offers: {

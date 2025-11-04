@@ -37,13 +37,27 @@ import type {
 export async function getSessionsByEvent(
   eventId: string,
   filters?: Omit<SessionFilters, 'event_id'>
-): Promise<Session[] | null> {
+): Promise<(Session & {
+  venue: {
+    id: string;
+    name: string;
+    city: string;
+    district: string | null;
+  } | null;
+  session_categories: {
+    price: number;
+  }[];
+})[] | null> {
   try {
     const supabase = await createClient();
 
     let query = supabase
       .from('sessions')
-      .select('*')
+      .select(`
+        *,
+        venue:venues(id, name, city, district),
+        session_categories(price)
+      `)
       .eq('event_id', eventId)
       .order('session_date', { ascending: true })
       .order('session_time', { ascending: true });
@@ -69,7 +83,17 @@ export async function getSessionsByEvent(
       return null;
     }
 
-    return data;
+    return data as (Session & {
+      venue: {
+        id: string;
+        name: string;
+        city: string;
+        district: string | null;
+      } | null;
+      session_categories: {
+        price: number;
+      }[];
+    })[];
   } catch (error) {
     console.error('Unexpected error in getSessionsByEvent:', error);
     return null;

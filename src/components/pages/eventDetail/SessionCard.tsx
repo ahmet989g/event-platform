@@ -3,10 +3,7 @@
 import Link from 'next/link';
 import type { Session } from '@/types/session.types';
 import {
-  formatSessionDateTime,
-  calculateCapacityStatus,
-  getCapacityBadge,
-  formatCapacityCount,
+  formatSessionTime,
   isSessionPurchasable,
   getSessionUrl,
 } from '@/lib/helpers/sessionHelpers';
@@ -16,118 +13,112 @@ interface SessionCardProps {
     venue?: {
       name: string;
       city: string;
+      district: string | null;
     } | null;
+    session_categories?: {
+      price: number;
+    }[];
   };
   eventSlug: string;
   categorySlug: string;
 }
 
 export default function SessionCard({ session, eventSlug, categorySlug }: SessionCardProps) {
-  const capacityStatus = calculateCapacityStatus(
-    session.available_capacity,
-    session.total_capacity
-  );
-  const capacityBadge = getCapacityBadge(capacityStatus);
   const isPurchasable = isSessionPurchasable(session.status, session.available_capacity);
   const sessionUrl = getSessionUrl(categorySlug, eventSlug, session.id);
 
+  // Date formatting
+  const sessionDate = new Date(session.session_date);
+  const dayName = sessionDate.toLocaleDateString('tr-TR', { weekday: 'long' });
+  const dayNumber = sessionDate.getDate();
+  const monthName = sessionDate.toLocaleDateString('tr-TR', { month: 'long' });
+  const year = sessionDate.getFullYear();
+
   return (
-    <div className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-      <div className="p-6">
-        {/* Tarih ve Saat */}
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
-            <svg
-              className="h-6 w-6 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
+    <article className="group relative">
+      <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-gray-900 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-600">
+
+        {/* Date & Time - Horizontal Layout */}
+        <div className="mb-6 flex items-center justify-between border-b border-gray-100 pb-6 dark:border-gray-800">
+          {/* Date */}
           <div>
-            <p className="text-sm">Tarih ve Saat</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {formatSessionDateTime(session.session_date, session.session_time)}
-            </p>
+            <div className="flex items-baseline justify-center text-center gap-2">
+              <div className="flex flex-col">
+                <span className="text-4xl font-bold text-primary">
+                  {dayNumber}
+                </span>
+                <span className="text-sm font-medium uppercase text-gray-900 dark:text-gray-400">
+                  {monthName}
+                </span>
+                <span className="text-sm capitalize text-gray-700 dark:text-gray-400">
+                  {dayName}
+                </span>
+                <span className="text-sm capitalize text-gray-700 dark:text-gray-400">
+                  {year}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Time */}
+          <div className="text-right">
+            <div className="text-2xl font-bold tabular-nums text-gray-900 dark:text-white">
+              {formatSessionTime(session.session_time)}
+            </div>
           </div>
         </div>
 
-        {/* Mekan */}
+        {/* Venue - Clean Layout */}
         {session.venue && (
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+          <div className="mb-6 space-y-1">
+            <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Mekan
             </div>
-            <div>
-              <p className="text-sm">Mekan</p>
-              <p className="font-medium text-gray-900 dark:text-white">
-                {session.venue.name}
-              </p>
-              <p className="text-sm">
-                {session.venue.city}
-              </p>
+            <div className="text-base font-semibold text-gray-900 dark:text-white">
+              {session.venue.name}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              {session.venue.district ? `${session.venue.district}, ` : ''}{session.venue.city}
             </div>
           </div>
         )}
 
-        {/* Kapasite Durumu */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-sm">Müsait Kapasite</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {formatCapacityCount(session.available_capacity)} /{' '}
-              {formatCapacityCount(session.total_capacity)}
-            </p>
-          </div>
-          <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${capacityBadge.bgColor} ${capacityBadge.color}`}
-          >
-            {capacityBadge.text}
-          </span>
-        </div>
+        {/* Spacer */}
+        <div className="flex-grow" />
 
-        {/* Bilet Al Butonu */}
+        {/* CTA Button - Minimal */}
         {isPurchasable ? (
           <Link
             href={sessionUrl}
-            className="block w-full rounded-lg bg-primary py-3 text-center font-semibold text-white transition hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="group/btn flex h-12 items-center justify-center rounded-lg bg-gray-900 text-sm font-semibold text-white transition-all hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
           >
-            Bilet Al
+            <span>Bilet Al</span>
+            <svg
+              className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </Link>
         ) : (
           <button
             disabled
-            className="w-full cursor-not-allowed rounded-lg bg-gray-300 py-3 text-center font-semibold dark:bg-gray-700"
+            className="flex h-12 cursor-not-allowed items-center justify-center rounded-lg border border-gray-200 text-sm font-semibold text-gray-400 dark:border-gray-800 dark:text-gray-600"
           >
-            {capacityStatus === 'sold_out' ? 'Tükendi' : 'Bilet Alınamaz'}
+            Bilet Alınamaz
           </button>
         )}
       </div>
-    </div>
+
+      {/* Sold Out Badge - Minimal */}
+      {session.status === 'sold_out' && (
+        <div className="absolute right-4 top-4 rounded bg-gray-900 px-2 py-1 text-xs font-semibold text-white dark:bg-white dark:text-gray-900">
+          Tükendi
+        </div>
+      )}
+    </article>
   );
 }
