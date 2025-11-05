@@ -8,7 +8,6 @@ import { createClient } from '@/utils/supabase/server';
 import type {
   Session,
   SessionWithRelations,
-  SessionCategory,
   SessionCategoryWithTicketCategory,
   Seat,
   SeatWithCategories,
@@ -17,10 +16,6 @@ import type {
   ReservationWithDetails,
   SessionFilters,
   SeatFilters,
-  CreateSessionInput,
-  CreateSessionCategoryInput,
-  CreateSeatInput,
-  CreateBlockInput,
   SeatStatus,
 } from '@/types/session.types';
 
@@ -139,44 +134,39 @@ export async function getSessionById(
 }
 
 /**
- * Session oluştur
- * @param input - Session oluşturma verisi
- * @returns Oluşturulan session veya null
+ * Slug ile session getir
+ * @param slug - Session slug (15-ocak-2025-2030)
+ * @returns Session with relations veya null
  */
-export async function createSession(
-  input: CreateSessionInput
-): Promise<Session | null> {
+export async function getSessionBySlug(
+  slug: string
+): Promise<SessionWithRelations | null> {
   try {
     const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('sessions')
-      .insert({
-        event_id: input.event_id,
-        venue_id: input.venue_id,
-        session_date: input.session_date,
-        session_time: input.session_time,
-        layout_type: input.layout_type,
-        layout_config: input.layout_config || {},
-        total_capacity: input.total_capacity,
-        available_capacity: input.total_capacity,
-        status: input.status || 'upcoming',
-        reservation_duration_minutes: input.reservation_duration_minutes || 10,
-        minimap_enabled: input.minimap_enabled || false,
-        minimap_config: input.minimap_config || {},
-        zoom_config: input.zoom_config || {},
-      })
-      .select()
+      .select(`
+        *,
+        event:events(id, title, slug, poster_url),
+        venue:venues(id, name, city, district),
+        session_categories(
+          *,
+          ticket_category:ticket_categories(*)
+        ),
+        blocks(*)
+      `)
+      .eq('slug', slug)
       .single();
 
     if (error) {
-      console.error('Error creating session:', error);
+      console.error('Error fetching session by slug:', error);
       return null;
     }
 
-    return data;
+    return data as SessionWithRelations;
   } catch (error) {
-    console.error('Unexpected error in createSession:', error);
+    console.error('Unexpected error in getSessionBySlug:', error);
     return null;
   }
 }
@@ -214,44 +204,6 @@ export async function getSessionCategories(
     return data as SessionCategoryWithTicketCategory[];
   } catch (error) {
     console.error('Unexpected error in getSessionCategories:', error);
-    return null;
-  }
-}
-
-/**
- * Session category oluştur
- * @param input - Session category oluşturma verisi
- * @returns Oluşturulan session category veya null
- */
-export async function createSessionCategory(
-  input: CreateSessionCategoryInput
-): Promise<SessionCategory | null> {
-  try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from('session_categories')
-      .insert({
-        session_id: input.session_id,
-        ticket_category_id: input.ticket_category_id,
-        price: input.price,
-        color: input.color,
-        capacity: input.capacity,
-        available_capacity: input.capacity, // İlk değer capacity ile aynı
-        max_per_order: input.max_per_order,
-        is_active: input.is_active !== undefined ? input.is_active : true,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating session category:', error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Unexpected error in createSessionCategory:', error);
     return null;
   }
 }
@@ -360,50 +312,6 @@ export async function getSeatWithCategories(
     return data as SeatWithCategories;
   } catch (error) {
     console.error('Unexpected error in getSeatWithCategories:', error);
-    return null;
-  }
-}
-
-/**
- * Koltuk oluştur
- * @param input - Seat oluşturma verisi
- * @returns Oluşturulan seat veya null
- */
-export async function createSeat(
-  input: CreateSeatInput
-): Promise<Seat | null> {
-  try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from('seats')
-      .insert({
-        session_id: input.session_id,
-        block_id: input.block_id,
-        seat_number: input.seat_number,
-        row_number: input.row_number,
-        column_number: input.column_number,
-        position_x: input.position_x,
-        position_y: input.position_y,
-        seat_type: input.seat_type || 'regular',
-        status: input.status || 'available',
-        label_text: input.label_text,
-        rotation: input.rotation || 0,
-        width: input.width || 1,
-        height: input.height || 1,
-        metadata: input.metadata || {},
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating seat:', error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Unexpected error in createSeat:', error);
     return null;
   }
 }
@@ -544,52 +452,6 @@ export async function getBlockById(
     return data as unknown as Block;
   } catch (error) {
     console.error('Unexpected error in getBlockById:', error);
-    return null;
-  }
-}
-
-/**
- * Block oluştur
- * @param input - Block oluşturma verisi
- * @returns Oluşturulan block veya null
- */
-export async function createBlock(
-  input: CreateBlockInput
-): Promise<Block | null> {
-  try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from('blocks')
-      .insert({
-        session_id: input.session_id,
-        name: input.name,
-        color: input.color,
-        total_capacity: input.total_capacity,
-        available_capacity: input.total_capacity,
-        geometry_type: input.geometry_type,
-        shape_data: input.shape_data,
-        position_x: input.position_x,
-        position_y: input.position_y,
-        zoom_level: input.zoom_level || 0,
-        min_zoom: input.min_zoom || 0.5,
-        max_zoom: input.max_zoom || 5.0,
-        parent_block_id: input.parent_block_id,
-        viewport_data: input.viewport_data || {},
-        sort_order: input.sort_order || 0,
-        is_active: input.is_active !== undefined ? input.is_active : true,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating block:', error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Unexpected error in createBlock:', error);
     return null;
   }
 }

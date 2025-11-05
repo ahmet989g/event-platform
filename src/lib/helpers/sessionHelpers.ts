@@ -174,25 +174,6 @@ export function getSessionStatusBadge(
   }
 }
 
-// ============================================
-// URL OLUŞTURMA
-// ============================================
-
-/**
- * Session detay sayfası URL'i oluştur
- * @param categorySlug - Kategori slug (konser, tiyatro)
- * @param eventSlug - Event slug
- * @param sessionId - Session UUID
- * @returns URL path
- */
-export function getSessionUrl(
-  categorySlug: string,
-  eventSlug: string,
-  sessionId: string
-): string {
-  return `/${categorySlug}/${eventSlug}/seans/${sessionId}`;
-}
-
 /**
  * Event detay sayfası URL'i
  * @param categorySlug - Kategori slug

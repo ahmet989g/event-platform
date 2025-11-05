@@ -142,6 +142,7 @@ export interface Session {
   id: string;
   event_id: string;
   venue_id: string | null;
+  slug: string;
   session_date: string; // Date string (YYYY-MM-DD)
   session_time: string; // Time string (HH:MM:SS)
   layout_type: LayoutType;
@@ -371,82 +372,6 @@ export interface ReservationWithDetails extends Reservation {
     session_category: SessionCategoryWithTicketCategory;
   })[];
   session: Session;
-}
-
-// ============================================
-// INPUT TYPES (Form & API)
-// ============================================
-
-/**
- * Session oluşturma input
- */
-export interface CreateSessionInput {
-  event_id: string;
-  venue_id?: string | null;
-  session_date: string;
-  session_time: string;
-  layout_type: LayoutType;
-  layout_config?: LayoutConfig;
-  total_capacity: number;
-  status?: SessionStatus;
-  reservation_duration_minutes?: number;
-  minimap_enabled?: boolean;
-  minimap_config?: MinimapConfig;
-  zoom_config?: ZoomConfig;
-}
-
-/**
- * Session category oluşturma input
- */
-export interface CreateSessionCategoryInput {
-  session_id: string;
-  ticket_category_id: string;
-  price: number;
-  color?: string | null;
-  capacity?: number | null;
-  max_per_order?: number | null;
-  is_active?: boolean;
-}
-
-/**
- * Seat oluşturma input
- */
-export interface CreateSeatInput {
-  session_id: string;
-  block_id?: string | null;
-  seat_number: string;
-  row_number?: string | null;
-  column_number?: number | null;
-  position_x: number;
-  position_y: number;
-  seat_type?: SeatType;
-  status?: SeatStatus;
-  label_text?: string | null;
-  rotation?: number;
-  width?: number;
-  height?: number;
-  metadata?: SeatMetadata;
-}
-
-/**
- * Block oluşturma input
- */
-export interface CreateBlockInput {
-  session_id: string;
-  name: string;
-  color: string;
-  total_capacity: number;
-  geometry_type: BlockGeometryType;
-  shape_data: ShapeData;
-  position_x: number;
-  position_y: number;
-  zoom_level?: number;
-  min_zoom?: number;
-  max_zoom?: number;
-  parent_block_id?: string | null;
-  viewport_data?: ViewportData;
-  sort_order?: number;
-  is_active?: boolean;
 }
 
 /**

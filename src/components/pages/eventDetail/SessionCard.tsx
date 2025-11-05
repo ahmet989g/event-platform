@@ -5,7 +5,6 @@ import type { Session } from '@/types/session.types';
 import {
   formatSessionTime,
   isSessionPurchasable,
-  getSessionUrl,
 } from '@/lib/helpers/sessionHelpers';
 
 interface SessionCardProps {
@@ -25,7 +24,7 @@ interface SessionCardProps {
 
 export default function SessionCard({ session, eventSlug, categorySlug }: SessionCardProps) {
   const isPurchasable = isSessionPurchasable(session.status, session.available_capacity);
-  const sessionUrl = getSessionUrl(categorySlug, eventSlug, session.id);
+  const sessionUrl = `/${categorySlug}/${eventSlug}/koltuk-secimi/${session.slug}`;
 
   // Date formatting
   const sessionDate = new Date(session.session_date);

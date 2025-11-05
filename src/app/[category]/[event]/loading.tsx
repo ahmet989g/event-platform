@@ -8,7 +8,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 export default function Loading() {
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto !px-0 py-12">
       {/* Event Header Skeleton */}
       <div className="mb-12">
         <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
