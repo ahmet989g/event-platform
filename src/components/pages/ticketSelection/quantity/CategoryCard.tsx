@@ -6,11 +6,20 @@
  * Direkt +/- butonları ile quantity selector
  */
 
+import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addCategory, updateQuantity } from '@/store/features/ticket/ticketSlice';
+import {
+  addCategory,
+  updateQuantity,
+  createReservationThunk,
+  updateReservationItemThunk,
+} from '@/store/features/ticket/ticketSlice';
 import type { SessionCategoryWithTicketCategory } from '@/types/session.types';
 import type { QuantityCategory } from '@/store/features/ticket/ticketTypes';
 import { FiPlus, FiMinus } from "react-icons/fi";
+import { useDebouncedCallback } from 'use-debounce';
+import { toast } from 'react-hot-toast';
+import { useUser } from '@/contexts/UserContext';
 
 interface CategoryCardProps {
   sessionCategory: SessionCategoryWithTicketCategory;
@@ -18,12 +27,23 @@ interface CategoryCardProps {
 
 export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
   const dispatch = useAppDispatch();
+  const { user } = useUser();
 
-  // Redux'tan seçili kategorileri al
+  // Redux selectors
   const selectedCategories = useAppSelector(
     (state) => state.ticket.quantity.selectedCategories
   );
   const totalQuantity = useAppSelector((state) => state.ticket.quantity.totalQuantity);
+  const reservationId = useAppSelector(
+    (state) => state.ticket.reservation.reservationId
+  );
+  const sessionId = useAppSelector((state) => state.ticket.session?.id);
+  const isLoading = useAppSelector(
+    (state) => state.ticket.reservation.isLoading
+  );
+
+  // Local state
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Bu kategori seçili mi?
   const selectedCategory = selectedCategories.find(
@@ -31,68 +51,203 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
   );
 
   const currentQuantity = selectedCategory?.quantity || 0;
+  const itemId = selectedCategory?.itemId;
 
-  // Kategori rengi (override varsa onu kullan, yoksa default)
+  // Kategori rengi
   const categoryColor =
     sessionCategory.color || sessionCategory.ticket_category.default_color;
 
-  // Max per order kontrolü
-  const maxPerOrder = sessionCategory.max_per_order || 10; // Default 10
-
-  // Toplam max kontrolü (tüm kategoriler toplamda max 10)
+  // Max kontrolü
+  const maxPerOrder = sessionCategory.max_per_order || 10;
   const MAX_TOTAL_QUANTITY = 10;
   const canIncrease = totalQuantity < MAX_TOTAL_QUANTITY && currentQuantity < maxPerOrder;
+  const isSoldOut = sessionCategory.available_capacity === 0;
 
-  // Kategori ekle/arttır
-  const handleIncrease = () => {
-    if (!canIncrease) return;
+  // ============================================
+  // DEBOUNCED BACKEND UPDATE
+  // ============================================
 
-    if (currentQuantity === 0) {
-      // İlk kez ekleniyor
-      const newCategory: QuantityCategory = {
-        sessionCategoryId: sessionCategory.id,
-        categoryName: sessionCategory.ticket_category.name,
-        price: sessionCategory.price,
+  /**
+   * Backend'e debounced update request
+   * 500ms bekle, son değeri gönder
+   */
+  const debouncedBackendUpdate = useDebouncedCallback(
+    async (newQuantity: number) => {
+      if (!reservationId || !itemId) return;
+
+      setIsUpdating(true);
+
+      const result = await dispatch(
+        updateReservationItemThunk({
+          reservationId,
+          itemId,
+          categoryId: sessionCategory.id,
+          oldQuantity: currentQuantity,
+          newQuantity,
+          unitPrice: sessionCategory.price,
+        })
+      );
+
+
+      // Başarısız durumu kontrol et
+      if (updateReservationItemThunk.rejected.match(result)) {
+        const error = result.payload;
+
+        // Kapasite yetersiz - Optimistic update'i geri al
+        if (error?.availableCapacity !== undefined) {
+          dispatch(
+            updateQuantity({
+              categoryId: sessionCategory.id,
+              quantity: error.availableCapacity,
+            })
+          );
+
+          toast.error(
+            `Maalesef sadece ${error.availableCapacity} bilet kaldı!`
+          );
+        } else {
+          // Diğer hatalar (expired, vs.)
+          toast.error(error?.message || 'Bir hata oluştu');
+        }
+      }
+
+      setIsUpdating(false);
+    },
+    500 // 500ms debounce
+  );
+
+  // ============================================
+  // HANDLERS
+  // ============================================
+
+  /**
+   * İLK SEÇİM (Rezervasyon oluştur)
+   */
+  const handleFirstSelection = async () => {
+    if (!sessionId) {
+      toast.error('Session bilgisi bulunamadı');
+      return;
+    }
+
+    const userId = user?.id || null;
+
+    // Optimistic update
+    const newCategory: QuantityCategory = {
+      sessionCategoryId: sessionCategory.id,
+      categoryName: sessionCategory.ticket_category.name,
+      price: sessionCategory.price,
+      quantity: 1,
+      maxPerOrder: sessionCategory.max_per_order,
+      color: categoryColor,
+    };
+    dispatch(addCategory(newCategory));
+
+    // Backend'e rezervasyon oluştur
+    const result = await dispatch(
+      createReservationThunk({
+        sessionId,
+        userId,
+        categoryId: sessionCategory.id,
         quantity: 1,
-        maxPerOrder: sessionCategory.max_per_order,
-        color: categoryColor,
-      };
-      dispatch(addCategory(newCategory));
-    } else {
-      // Adet arttır
+        unitPrice: sessionCategory.price,
+      })
+    );
+    console.log('handleFirstSelection Increase Called', result);
+
+    // Başarılı
+    if (createReservationThunk.fulfilled.match(result)) {
+      toast.success('Biletiniz rezerve edildi');
+
+      // TODO: Backend'den dönen item ID'yi Redux'a kaydet
+      // Şu an backend response'da item ID yok, eklemen gerekebilir
+    }
+
+    // Başarısız
+    if (createReservationThunk.rejected.match(result)) {
+      const error = result.payload;
+
+      // Optimistic update'i geri al
       dispatch(
         updateQuantity({
           categoryId: sessionCategory.id,
-          quantity: currentQuantity + 1,
+          quantity: 0,
         })
       );
+
+      toast.error(error?.message || 'Rezervasyon oluşturulamadı');
     }
   };
 
-  // Adet azalt
+  /**
+   * ARTIR (+)
+   */
+  const handleIncrease = () => {
+    if (!canIncrease || isSoldOut) return;
+
+    // Eğer ilk seçimse
+    if (currentQuantity === 0) {
+      handleFirstSelection();
+      return;
+    }
+
+    const newQuantity = currentQuantity + 1;
+
+    // Optimistic update (Redux'ı hemen güncelle)
+    dispatch(
+      updateQuantity({
+        categoryId: sessionCategory.id,
+        quantity: newQuantity,
+      })
+    );
+
+    // Backend'e debounced request
+    debouncedBackendUpdate(newQuantity);
+  };
+
+  /**
+   * AZALT (-)
+   */
   const handleDecrease = () => {
-    if (currentQuantity > 0) {
-      dispatch(
-        updateQuantity({
-          categoryId: sessionCategory.id,
-          quantity: currentQuantity - 1,
-        })
-      );
-    }
+    if (currentQuantity === 0) return;
+
+    const newQuantity = currentQuantity - 1;
+
+    // Optimistic update
+    dispatch(
+      updateQuantity({
+        categoryId: sessionCategory.id,
+        quantity: newQuantity,
+      })
+    );
+
+    // Backend'e debounced request
+    debouncedBackendUpdate(newQuantity);
   };
 
-  // Fiyat formatı: ₺750,00 veya ₺1.500,00
+  // ============================================
+  // CLEANUP
+  // ============================================
+
+  useEffect(() => {
+    return () => {
+      // Component unmount olduğunda pending debounce'ları iptal et
+      debouncedBackendUpdate.cancel();
+    };
+  }, [debouncedBackendUpdate]);
+
+  // ============================================
+  // RENDER
+  // ============================================
+
+  // Fiyat formatı
   const formattedPrice = `₺${sessionCategory.price.toLocaleString('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
 
-  // Bilet tükendi mi?
-  const isSoldOut = sessionCategory.available_capacity === 0;
-
   return (
     <div className="relative overflow-hidden rounded-xl bg-white p-6 transition-all hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800/50">
-      {/* Color Indicator - Sol taraf */}
+      {/* Color Indicator */}
       <div
         className="absolute left-0 top-0 h-full w-1.5"
         style={{ backgroundColor: categoryColor }}
@@ -119,29 +274,41 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
         {/* Sağ: Quantity Selector */}
         <div className="flex items-center gap-3">
           {/* Decrease Button */}
-          <button
-            onClick={handleDecrease}
-            disabled={currentQuantity === 0}
-            className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-            aria-label="Azalt"
-          >
-            <FiMinus className="h-5 w-5" />
-          </button>
+          {isLoading || isUpdating ? (
+            <div className="ml-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+            </div>
+          ) : (
+            <button
+              onClick={handleDecrease}
+              disabled={currentQuantity === 0 || isLoading || isUpdating}
+              className="flex h-11 w-11 items-center justify-center rounded-lg cursor-pointer transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+              aria-label="Azalt"
+            >
+              <FiMinus className="h-5 w-5" />
+            </button>
+          )}
 
           {/* Quantity Display */}
-          <span className="flex h-11 w-14 items-center justify-center text-lg font-bold dark:bg-gray-800">
+          <span className="flex h-11 w-10 items-center justify-center text-lg font-bold dark:bg-gray-800">
             {currentQuantity}
           </span>
 
           {/* Increase Button */}
-          <button
-            onClick={handleIncrease}
-            disabled={isSoldOut || !canIncrease}
-            className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-            aria-label="Arttır"
-          >
-            <FiPlus className="h-5 w-5" />
-          </button>
+          {isLoading || isUpdating ? (
+            <div className="ml-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+            </div>
+          ) : (
+            <button
+              onClick={handleIncrease}
+              disabled={isSoldOut || !canIncrease || isLoading || isUpdating}
+              className="flex h-11 w-11 items-center justify-center rounded-lg cursor-pointer transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+              aria-label="Arttır"
+            >
+              <FiPlus className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -158,8 +325,8 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
       {!canIncrease && currentQuantity > 0 && !isSoldOut && (
         <div className="mt-3 pl-4 text-xs text-amber-600 dark:text-amber-400">
           {totalQuantity >= MAX_TOTAL_QUANTITY
-            ? 'Maksimum 10 adet bilet seçebilirsiniz'
-            : `Maksimum ${maxPerOrder} adet seçebilirsiniz`}
+            ? `Maksimum ${MAX_TOTAL_QUANTITY} bilet seçebilirsiniz`
+            : `Bu kategoriden maksimum ${maxPerOrder} bilet seçebilirsiniz`}
         </div>
       )}
     </div>

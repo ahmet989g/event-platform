@@ -27,14 +27,19 @@ export interface QuantityCategory {
   quantity: number;
   maxPerOrder: number | null;
   color: string;
+  itemId?: string; // ⚠️ YENI - Backend'den dönen reservation_item_id
 }
 
 /**
  * Rezervasyon bilgisi
+ * ⚠️ GÜNCEL - Phase 2 için isLoading, error, reservationId eklendi
  */
 export interface ReservationInfo {
+  reservationId: string | null; // ⚠️ YENI - Backend'den dönen reservation ID
   startTime: number | null; // timestamp
   duration: number; // dakika
+  isLoading: boolean; // ⚠️ YENI - Async işlem devam ediyor mu?
+  error: string | null; // ⚠️ YENI - Hata mesajı
 }
 
 /**
@@ -67,17 +72,68 @@ export interface TicketState {
 
 /**
  * Initial State (başlangıç değerleri)
+ * ⚠️ GÜNCEL - Phase 2 için yeni field'lar eklendi
  */
 export const initialTicketState: TicketState = {
   layoutType: null,
   session: null,
   reservation: {
+    reservationId: null, // ⚠️ YENI
     startTime: null,
     duration: 10, // default 10 dakika
+    isLoading: false, // ⚠️ YENI
+    error: null, // ⚠️ YENI
   },
   quantity: {
     selectedCategories: [],
     totalPrice: 0,
     totalQuantity: 0,
   },
+};
+
+// ============================================
+// SELECTOR HELPERS (Opsiyonel)
+// ============================================
+
+/**
+ * Rezervasyon loading durumu
+ * Component'lerde kullanım için
+ */
+export const selectIsReservationLoading = (state: { ticket: TicketState }) => 
+  state.ticket.reservation.isLoading;
+
+/**
+ * Rezervasyon error durumu
+ * Component'lerde kullanım için
+ */
+export const selectReservationError = (state: { ticket: TicketState }) => 
+  state.ticket.reservation.error;
+
+/**
+ * Rezervasyon var mı?
+ * Component'lerde kullanım için
+ */
+export const selectHasReservation = (state: { ticket: TicketState }) => 
+  state.ticket.reservation.reservationId !== null;
+
+/**
+ * Rezervasyon ID
+ * Component'lerde kullanım için
+ */
+export const selectReservationId = (state: { ticket: TicketState }) => 
+  state.ticket.reservation.reservationId;
+
+/**
+ * Kalan süre (saniye)
+ * Component'lerde kullanım için
+ */
+export const selectRemainingTime = (state: { ticket: TicketState }) => {
+  const { startTime, duration } = state.ticket.reservation;
+  if (!startTime) return 0;
+  
+  const elapsed = Date.now() - startTime;
+  const total = duration * 60 * 1000; // ms'ye çevir
+  const remaining = total - elapsed;
+  
+  return Math.max(0, Math.floor(remaining / 1000)); // saniye
 };

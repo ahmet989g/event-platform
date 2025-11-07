@@ -1,11 +1,6 @@
-"use client";
-
-/**
- * Countdown Timer
- * Pill shape border progress (template based)
- */
-
 import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { cancelReservationThunk } from '@/store/features/ticket/ticketSlice';
 
 interface CountdownTimerProps {
   startTime: number;
@@ -13,8 +8,23 @@ interface CountdownTimerProps {
   onTimeExpired?: () => void;
 }
 
-export default function CountdownTimer({ startTime, duration, onTimeExpired }: CountdownTimerProps) {
+export default function CountdownTimer({
+  startTime,
+  duration,
+  onTimeExpired
+}: CountdownTimerProps) {
+  const dispatch = useAppDispatch();
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [isExpiring, setIsExpiring] = useState(false);
+
+  // Redux'tan rezervasyon ID'sini al
+  const reservationId = useAppSelector(
+    (state) => state.ticket.reservation.reservationId
+  );
+
+  // ============================================
+  // COUNTDOWN LOGIC
+  // ============================================
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -32,14 +42,37 @@ export default function CountdownTimer({ startTime, duration, onTimeExpired }: C
 
       if (remaining === 0) {
         clearInterval(interval);
-        if (onTimeExpired) {
-          onTimeExpired();
-        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime, duration, onTimeExpired]);
+  }, [startTime, duration]);
+
+  // ============================================
+  // AUTO-CANCEL ON EXPIRE
+  // ============================================
+
+  useEffect(() => {
+    const handleExpire = async () => {
+      if (timeLeft === 0 && reservationId && !isExpiring) {
+        setIsExpiring(true);
+
+        // Backend'e iptal request
+        await dispatch(cancelReservationThunk(reservationId));
+
+        // Callback çağır (modal göstermek için)
+        onTimeExpired?.();
+
+        setIsExpiring(false);
+      }
+    };
+
+    handleExpire();
+  }, [timeLeft, reservationId, isExpiring, dispatch, onTimeExpired]);
+
+  // ============================================
+  // FORMAT & STYLING
+  // ============================================
 
   // Dakika ve saniye
   const totalSeconds = Math.floor(timeLeft / 1000);
@@ -59,14 +92,13 @@ export default function CountdownTimer({ startTime, duration, onTimeExpired }: C
 
   const color = getColor();
 
-  // SVG dimensions (template'e göre scaled)
+  // SVG dimensions
   const width = 80;
   const height = 32;
-  const radius = height / 2; // 28 (pill shape için yarım yükseklik)
+  const radius = height / 2;
   const strokeWidth = 3;
 
-  // Template'deki gibi path (pill shape)
-  // M start A top-left L top-line A top-right L right-line A bottom-right L bottom-line A bottom-left Z
+  // Pill shape path
   const pathD = `
     M ${strokeWidth} ${radius}
     A ${radius - strokeWidth} ${radius - strokeWidth} 0 0 1 ${radius} ${strokeWidth}
@@ -79,9 +111,9 @@ export default function CountdownTimer({ startTime, duration, onTimeExpired }: C
     Z
   `;
 
-  // Path length calculation (perimeter)
-  const straightLength = width - radius * 2; // Top + bottom
-  const arcLength = Math.PI * (radius - strokeWidth); // Half circle × 2
+  // Path length calculation
+  const straightLength = width - radius * 2;
+  const arcLength = Math.PI * (radius - strokeWidth);
   const pathLength = straightLength * 2 + arcLength * 2;
 
   const strokeDashoffset = pathLength - (progress / 100) * pathLength;
@@ -121,10 +153,7 @@ export default function CountdownTimer({ startTime, duration, onTimeExpired }: C
 
         {/* Timer text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span
-            className="text-md font-bold tabular-nums"
-            style={{ color }}
-          >
+          <span className="text-md font-bold tabular-nums" style={{ color }}>
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </span>
         </div>

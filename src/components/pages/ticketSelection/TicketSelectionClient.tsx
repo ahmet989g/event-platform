@@ -12,6 +12,7 @@ import type { Event } from '@/types/database.types';
 import type { SessionWithRelations } from '@/types/session.types';
 import type { SessionInfo } from '@/store/features/ticket/ticketTypes';
 import QuantityLayout from './quantity/QuantityLayout';
+import { useReservationCleanup } from '@/lib/hooks/useReservationCleanup';
 
 interface TicketSelectionClientProps {
   event: Event & { category: { name: string; slug: string } };
@@ -54,6 +55,9 @@ export default function TicketSelectionClient({
       dispatch(resetState());
     };
   }, [dispatch, session, event]);
+
+  // Rezervasyon temizleme hook'u (sayfadan ayrılınca rezervasyonu iptal et)
+  useReservationCleanup();
 
   // Layout tipine göre component render et
   const renderLayout = () => {

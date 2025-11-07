@@ -51,13 +51,16 @@ export async function generateMetadata({ params }: TicketSelectionPageProps): Pr
 export default async function TicketSelectionPage({ params }: TicketSelectionPageProps) {
   const { category: categorySlug, event: eventSlug, sessionSlug } = await params;
 
-  // Event data çek
-  const event = await getEventBySlug(eventSlug);
-  if (!event) notFound();
+  //Promise.all kullanalım
+  const [event, session] = await Promise.all([
+    getEventBySlug(eventSlug),
+    getSessionBySlug(sessionSlug),
+  ]);
 
-  // Session data çek (venue ve categories ile)
-  const session = await getSessionBySlug(sessionSlug);
-  if (!session) notFound();
+  // Event veya Session bulunamazsa 404
+  if (!event || !session) {
+    notFound();
+  }
 
   // Session'ın event'i ile URL'deki event uyuşuyor mu? (Güvenlik)
   if (session.event_id !== event.id) {
