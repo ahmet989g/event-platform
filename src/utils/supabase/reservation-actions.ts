@@ -1,8 +1,5 @@
 /**
- * PHASE 1: RESERVATION ACTIONS
- * Supabase Backend Integration for Reservation System
- * 
- * @description Server-side reservation CRUD operations
+ * Rezervasyon işlemleri için Supabase etkileşimleri
  */
 
 'use server';
@@ -49,6 +46,7 @@ export interface UpdateReservationItemParams {
 export interface ReservationActionResult<T = unknown> {
   success: boolean;
   data?: T;
+  items?: ReservationItem[];
   error?: string;
   availableCapacity?: number;
 }
@@ -110,11 +108,12 @@ export async function createReservation(
     }));
 
     // 4. Item'ları ekle
-    const { error: itemsError } = await supabase
+    const { data: createdItems, error: itemsError } = await supabase
       .from('reservation_items')
-      .insert(itemsToInsert);
+      .insert(itemsToInsert)
+      .select('id, session_category_id, quantity, unit_price, subtotal');
 
-    if (itemsError) {
+    if (itemsError || !createdItems) {
       console.error('Error creating reservation items:', itemsError);
       
       // Rollback: Rezervasyonu sil
@@ -152,6 +151,7 @@ export async function createReservation(
     return {
       success: true,
       data: reservation as Reservation,
+      items: createdItems as ReservationItem[],
     };
 
   } catch (error) {
@@ -247,13 +247,22 @@ export async function updateReservationItem(
     }
 
     // 4. Item'ı güncelle
+    if (!params.itemId) {
+      console.error('❌ Item ID boş!');
+      return {
+        success: false,
+        error: 'Item ID bulunamadı',
+      };
+    }
+
     const { data: updatedItem, error: updateError } = await supabase
       .from('reservation_items')
       .update({
         quantity: params.newQuantity,
         subtotal: params.newQuantity * params.unitPrice,
       })
-      .eq('id', params.itemId)
+      .eq('reservation_id', params.reservationId)
+      .eq('session_category_id', params.sessionCategoryId)
       .select()
       .single();
 

@@ -13,6 +13,7 @@ import {
   updateQuantity,
   createReservationThunk,
   updateReservationItemThunk,
+  removeReservationItemThunk,
 } from '@/store/features/ticket/ticketSlice';
 import type { SessionCategoryWithTicketCategory } from '@/types/session.types';
 import type { QuantityCategory } from '@/store/features/ticket/ticketTypes';
@@ -72,7 +73,11 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
    * 500ms bekle, son değeri gönder
    */
   const debouncedBackendUpdate = useDebouncedCallback(
-    async (newQuantity: number) => {
+    async (oldQuantity: number, newQuantity: number) => {
+      console.log('Debounced backend update:', {
+        reservationId,
+        itemId,
+      });
       if (!reservationId || !itemId) return;
 
       setIsUpdating(true);
@@ -82,13 +87,11 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
           reservationId,
           itemId,
           categoryId: sessionCategory.id,
-          oldQuantity: currentQuantity,
+          oldQuantity,
           newQuantity,
           unitPrice: sessionCategory.price,
         })
       );
-      console.log('updateReservationItemThunk:', result);
-
 
       // Başarısız durumu kontrol et
       if (updateReservationItemThunk.rejected.match(result)) {
@@ -114,7 +117,7 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
 
       setIsUpdating(false);
     },
-    500 // 500ms debounce
+    100 // 500ms debounce
   );
 
   // ============================================
@@ -157,9 +160,6 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
     // Başarılı
     if (createReservationThunk.fulfilled.match(result)) {
       toast.success('Biletiniz rezerve edildi');
-
-      // TODO: Backend'den dönen item ID'yi Redux'a kaydet
-      // Şu an backend response'da item ID yok, eklemen gerekebilir
     }
 
     // Başarısız
@@ -190,6 +190,7 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
       return;
     }
 
+    const oldQuantity = currentQuantity; // Mevcut değeri sakla
     const newQuantity = currentQuantity + 1;
 
     // Optimistic update (Redux'ı hemen güncelle)
@@ -201,7 +202,7 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
     );
 
     // Backend'e debounced request
-    debouncedBackendUpdate(newQuantity);
+    debouncedBackendUpdate(oldQuantity, newQuantity);
   };
 
   /**
@@ -210,9 +211,38 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
   const handleDecrease = () => {
     if (currentQuantity === 0) return;
 
+    const oldQuantity = currentQuantity;
     const newQuantity = currentQuantity - 1;
 
-    // Optimistic update
+    // ✅ 0'a düşüyorsa özel işlem
+    if (newQuantity === 0) {
+      console.log('🗑️ Kategori tamamen kaldırılıyor');
+
+      // Optimistic update
+      dispatch(
+        updateQuantity({
+          categoryId: sessionCategory.id,
+          quantity: 0,
+        })
+      );
+
+      // Backend'de sil (itemId'yi şimdi yakala!)
+      const currentItemId = itemId || selectedCategory?.reservationItemId;
+
+      if (reservationId && currentItemId) {
+        dispatch(
+          removeReservationItemThunk({
+            itemId: currentItemId,
+            categoryId: sessionCategory.id,
+            quantity: oldQuantity,
+          })
+        );
+      }
+
+      return;
+    }
+
+    // Normal azaltma
     dispatch(
       updateQuantity({
         categoryId: sessionCategory.id,
@@ -220,8 +250,7 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
       })
     );
 
-    // Backend'e debounced request
-    debouncedBackendUpdate(newQuantity);
+    debouncedBackendUpdate(oldQuantity, newQuantity);
   };
 
   // ============================================
@@ -275,8 +304,10 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
         <div className="flex items-center gap-3">
           {/* Decrease Button */}
           {isLoading || isUpdating ? (
-            <div className="ml-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+            <div className="">
+              <div className="flex h-11 w-11 items-center justify-center">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+              </div>
             </div>
           ) : (
             <button
@@ -296,8 +327,10 @@ function CategoryCard({ sessionCategory }: CategoryCardProps) {
 
           {/* Increase Button */}
           {isLoading || isUpdating ? (
-            <div className="ml-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+            <div className="">
+              <div className="flex h-11 w-11 items-center justify-center">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+              </div>
             </div>
           ) : (
             <button

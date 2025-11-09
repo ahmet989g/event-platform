@@ -27,7 +27,7 @@ export interface QuantityCategory {
   quantity: number;
   maxPerOrder: number | null;
   color: string;
-  itemId?: string; // Backend'den dönen reservation_item_id
+  reservationItemId?: string; // Backend'den dönen reservation_item_id
 }
 
 /**
