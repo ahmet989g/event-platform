@@ -27,7 +27,7 @@ export interface QuantityCategory {
   quantity: number;
   maxPerOrder: number | null;
   color: string;
-  itemId?: string; // ⚠️ YENI - Backend'den dönen reservation_item_id
+  itemId?: string; // Backend'den dönen reservation_item_id
 }
 
 /**
@@ -35,11 +35,11 @@ export interface QuantityCategory {
  * ⚠️ GÜNCEL - Phase 2 için isLoading, error, reservationId eklendi
  */
 export interface ReservationInfo {
-  reservationId: string | null; // ⚠️ YENI - Backend'den dönen reservation ID
+  reservationId: string | null; // Backend'den dönen reservation ID
   startTime: number | null; // timestamp
   duration: number; // dakika
-  isLoading: boolean; // ⚠️ YENI - Async işlem devam ediyor mu?
-  error: string | null; // ⚠️ YENI - Hata mesajı
+  isLoading: boolean; // Async işlem devam ediyor mu?
+  error: string | null; // Hata mesajı
 }
 
 /**
@@ -72,17 +72,16 @@ export interface TicketState {
 
 /**
  * Initial State (başlangıç değerleri)
- * ⚠️ GÜNCEL - Phase 2 için yeni field'lar eklendi
  */
 export const initialTicketState: TicketState = {
   layoutType: null,
   session: null,
   reservation: {
-    reservationId: null, // ⚠️ YENI
+    reservationId: null,
     startTime: null,
     duration: 10, // default 10 dakika
-    isLoading: false, // ⚠️ YENI
-    error: null, // ⚠️ YENI
+    isLoading: false,
+    error: null,
   },
   quantity: {
     selectedCategories: [],

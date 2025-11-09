@@ -152,6 +152,7 @@ export const updateReservationItemThunk = createAsyncThunk<
 >(
   'ticket/updateReservationItem',
   async (params, { rejectWithValue }) => {
+      console.log('updateReservationItem:', params);
     try {
       // Backend'e request
       const result = await updateReservationItem({
@@ -162,6 +163,7 @@ export const updateReservationItemThunk = createAsyncThunk<
         newQuantity: params.newQuantity,
         unitPrice: params.unitPrice,
       });
+      console.log('updateReservationItemThunk Result:', result);
 
       // Başarısız (kapasite yetersiz veya expired)
       if (!result.success) {

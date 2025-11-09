@@ -242,7 +242,7 @@ export async function updateReservationItem(
       return {
         success: false,
         error: capacityResult?.message || 'Kapasite kontrolü başarısız',
-        availableCapacity: capacityResult?.available_quantity || 0,
+        availableCapacity: capacityResult?.available_capacity || 0,
       };
     }
 
@@ -251,7 +251,7 @@ export async function updateReservationItem(
       .from('reservation_items')
       .update({
         quantity: params.newQuantity,
-        total_price: params.newQuantity * params.unitPrice,
+        subtotal: params.newQuantity * params.unitPrice,
       })
       .eq('id', params.itemId)
       .select()

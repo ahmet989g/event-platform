@@ -6,7 +6,7 @@
  * Direkt +/- butonları ile quantity selector
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addCategory,
@@ -25,7 +25,7 @@ interface CategoryCardProps {
   sessionCategory: SessionCategoryWithTicketCategory;
 }
 
-export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
+function CategoryCard({ sessionCategory }: CategoryCardProps) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
 
@@ -51,7 +51,7 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
   );
 
   const currentQuantity = selectedCategory?.quantity || 0;
-  const itemId = selectedCategory?.itemId;
+  const itemId = selectedCategory?.sessionCategoryId;
 
   // Kategori rengi
   const categoryColor =
@@ -87,6 +87,7 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
           unitPrice: sessionCategory.price,
         })
       );
+      console.log('updateReservationItemThunk:', result);
 
 
       // Başarısız durumu kontrol et
@@ -152,7 +153,6 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
         unitPrice: sessionCategory.price,
       })
     );
-    console.log('handleFirstSelection Increase Called', result);
 
     // Başarılı
     if (createReservationThunk.fulfilled.match(result)) {
@@ -332,3 +332,5 @@ export default function CategoryCard({ sessionCategory }: CategoryCardProps) {
     </div>
   );
 }
+
+export default memo(CategoryCard);
