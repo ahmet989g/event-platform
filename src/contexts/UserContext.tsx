@@ -111,7 +111,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔔 Auth event:", event);
 
       if (session?.user) {
         setAuthUser(session.user);
@@ -125,20 +124,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     // Custom event listener (profil güncellemesi için)
     const handleAuthChange = async () => {
-      console.log("🎯 Custom auth event received - Force refresh");
 
       // Session'ı yeniden çek
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      console.log("📦 Session after refresh:", session?.user?.id);
 
       if (session?.user) {
         setAuthUser(session.user);
         // Profile'ı da yeniden çek
         const userData = await fetchUserProfile(session.user.id);
-        console.log("👤 User data after refresh:", userData);
         setUser(userData);
       } else {
         setAuthUser(null);

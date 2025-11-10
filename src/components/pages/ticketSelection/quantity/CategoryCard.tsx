@@ -36,7 +36,6 @@ function CategoryCard({ sessionCategory, totalQuantity }: CategoryCardProps) {
     categoryColor,
   } = useCategorySelection({ sessionCategory });
 
-  console.log('Rendering CategoryCard:', sessionCategory.id);
 
   // Computed values
   const formattedPrice = formatPrice(sessionCategory.price);

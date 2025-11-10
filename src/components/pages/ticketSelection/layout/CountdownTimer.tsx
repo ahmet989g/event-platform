@@ -1,4 +1,12 @@
-import { useEffect, useState } from 'react';
+/**
+ * Countdown Timer (Production-Ready)
+ * Reliable timer using Page Visibility API + requestAnimationFrame
+ * @description Solves background tab throttling issues
+ */
+
+"use client";
+
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { cancelReservationThunk } from '@/store/features/ticket/ticketSlice';
 
@@ -17,58 +25,125 @@ export default function CountdownTimer({
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isExpiring, setIsExpiring] = useState(false);
 
+  // Refs for stable references
+  const isExpiringRef = useRef(false);
+  const animationFrameRef = useRef<number>(0);
+  const lastUpdateRef = useRef<number>(Date.now());
+
   // Redux'tan rezervasyon ID'sini al
   const reservationId = useAppSelector(
     (state) => state.ticket.reservation.reservationId
   );
 
   // ============================================
-  // COUNTDOWN LOGIC
+  // CALCULATE TIME LEFT (Pure function)
   // ============================================
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const endTime = startTime + duration * 60 * 1000;
-      const now = Date.now();
-      const remaining = Math.max(0, endTime - now);
-      return remaining;
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
-    const interval = setInterval(() => {
-      const remaining = calculateTimeLeft();
-      setTimeLeft(remaining);
-
-      if (remaining === 0) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
+  const calculateTimeLeft = useCallback(() => {
+    const endTime = startTime + duration * 60 * 1000;
+    const now = Date.now();
+    const remaining = Math.max(0, endTime - now);
+    return remaining;
   }, [startTime, duration]);
 
   // ============================================
-  // AUTO-CANCEL ON EXPIRE
+  // HANDLE EXPIRATION (Stable reference)
+  // ============================================
+
+  const handleExpiration = useCallback(async () => {
+    // Guard: Zaten expire işlemi başladıysa tekrar çağırma
+    if (isExpiringRef.current) return;
+
+    isExpiringRef.current = true;
+    setIsExpiring(true);
+
+    // Backend'e iptal request
+    if (reservationId) {
+      try {
+        await dispatch(cancelReservationThunk(reservationId));
+      } catch (error) {
+        console.error('❌ Error cancelling reservation:', error);
+      }
+    }
+
+    // Callback çağır (modal göstermek için)
+    onTimeExpired?.();
+
+    setIsExpiring(false);
+  }, [reservationId, dispatch, onTimeExpired]);
+
+  // ============================================
+  // REQUESTANIMATIONFRAME LOOP
   // ============================================
 
   useEffect(() => {
-    const handleExpire = async () => {
-      if (timeLeft === 0 && reservationId && !isExpiring) {
-        setIsExpiring(true);
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = calculateTimeLeft();
 
-        // Backend'e iptal request
-        await dispatch(cancelReservationThunk(reservationId));
+      // Update her saniye (throttle)
+      if (now - lastUpdateRef.current >= 1000 || remaining === 0) {
+        setTimeLeft(remaining);
+        lastUpdateRef.current = now;
 
-        // Callback çağır (modal göstermek için)
-        onTimeExpired?.();
+        // Süre doldu mu?
+        if (remaining === 0 && !isExpiringRef.current) {
+          handleExpiration();
+          return; // Loop'u durdur
+        }
+      }
 
-        setIsExpiring(false);
+      // Devam et
+      if (remaining > 0) {
+        animationFrameRef.current = requestAnimationFrame(updateTimer);
       }
     };
 
-    handleExpire();
-  }, [timeLeft, reservationId, isExpiring, dispatch, onTimeExpired]);
+    // İlk update
+    const initial = calculateTimeLeft();
+    setTimeLeft(initial);
+
+    // Eğer zaten expired ise direkt handle et
+    if (initial === 0 && !isExpiringRef.current) {
+      handleExpiration();
+    } else {
+      // Loop'u başlat
+      animationFrameRef.current = requestAnimationFrame(updateTimer);
+    }
+
+    // Cleanup
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [calculateTimeLeft, handleExpiration]);
+
+  // ============================================
+  // PAGE VISIBILITY API (Background tab kontrolü)
+  // ============================================
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+
+        // Tab aktif olduğunda immediate check
+        const remaining = calculateTimeLeft();
+        setTimeLeft(remaining);
+
+        // Süre dolmuşsa hemen handle et
+        if (remaining === 0 && !isExpiringRef.current) {
+          handleExpiration();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [calculateTimeLeft, handleExpiration]);
 
   // ============================================
   // FORMAT & STYLING
