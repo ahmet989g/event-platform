@@ -1,35 +1,51 @@
 "use client";
 
 /**
- * Quantity Layout (Adet Seçimli)
- * 2 kolonlu layout: Sol kategori listesi, Sağ sepet özeti
+ * Block Layout Client Component
+ * Block-based seating layout - Client side interactivity
+ * @description Event Ticketing Platform - Block seating UI
  */
 
+import { useEffect, useState } from 'react';
+import { BlockCanvas } from './BlockCanvas';
 import type { Event } from '@/types/database.types';
 import type { SessionWithRelations } from '@/types/session.types';
-import CategoryList from './CategoryList';
-import CartSummary from '../layout/CartSummary';
-import Link from 'next/link';
+import type { Block } from '@/types/seating/block.types';
+import type { Seat } from '@/types/seating/seat.types';
 import { useReservationCleanup } from '@/lib/hooks/useReservationCleanup';
 import { resetState, setSession, startReservation } from '@/store/features/ticket/ticketSlice';
 import { SessionInfo } from '@/store/features/ticket/ticketTypes';
-import { useEffect } from 'react';
 import { useAppDispatch } from '@/store/hooks';
+import Link from 'next/link';
+import CartSummary from '../layout/CartSummary';
 
-interface QuantityLayoutProps {
+// ============================================
+// TYPES
+// ============================================
+
+interface BlockLayoutClientProps {
   session: SessionWithRelations;
   event: Event & { category: { name: string; slug: string } };
   categorySlug: string;
+  blocks: Block[];
+  seats: Seat[];
 }
 
-export default function QuantityLayout({
+// ============================================
+// CLIENT COMPONENT
+// ============================================
+
+export default function BlockLayoutClient({
   session,
   event,
   categorySlug,
-}: QuantityLayoutProps) {
+  blocks,
+  seats,
+}: BlockLayoutClientProps) {
   // Breadcrumb & Event URL
   const eventUrl = `/${categorySlug}/${event.slug}`;
-
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
   const dispatch = useAppDispatch();
 
   // Session bilgisini Redux'a kaydet ve rezervasyon başlat
@@ -64,6 +80,32 @@ export default function QuantityLayout({
   // Rezervasyon temizleme hook'u (sayfadan ayrılınca rezervasyonu iptal et)
   useReservationCleanup();
 
+  // ============================================
+  // HANDLERS
+  // ============================================
+
+  const handleBlockSelect = (blockId: string | null) => {
+    setSelectedBlockId(blockId);
+    console.log('Block selected:', blockId);
+  };
+
+  const handleSeatSelect = (seatId: string) => {
+    setSelectedSeatIds((prev) => {
+      if (prev.includes(seatId)) {
+        // Deselect
+        return prev.filter((id) => id !== seatId);
+      } else {
+        // Select
+        return [...prev, seatId];
+      }
+    });
+    console.log('Seat toggled:', seatId);
+  };
+
+  // ============================================
+  // RENDER
+  // ============================================
+
   return (
     <div className="container mx-auto !px-0 py-8">
       {/* Breadcrumb / Header */}
@@ -88,9 +130,21 @@ export default function QuantityLayout({
 
       {/* Main Grid - 2 Kolon */}
       <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-        {/* Sol: Kategori Listesi */}
+        {/* Sol: Canvas */}
         <div>
-          <CategoryList sessionCategories={session.session_categories || []} />
+          <BlockCanvas
+            blocks={blocks}
+            seats={seats}
+            width={1200}
+            height={800}
+            selectedBlockId={selectedBlockId}
+            selectedSeatIds={selectedSeatIds}
+            onBlockSelect={handleBlockSelect}
+            onSeatSelect={handleSeatSelect}
+            showLegend
+            showBlockLabels
+            showCapacity={false}
+          />
         </div>
 
         {/* Sağ: Sepet Özeti (Sticky) */}

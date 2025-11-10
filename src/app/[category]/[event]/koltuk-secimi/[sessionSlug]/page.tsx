@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { getEventBySlug } from '@/utils/supabase/queries';
 import { getSessionBySlug } from '@/utils/supabase/session-queries';
 import TicketSelectionClient from '@/components/pages/ticketSelection/TicketSelectionClient';
+import TicketSelection from '@/components/pages/ticketSelection/TicketSelection';
 
 interface TicketSelectionPageProps {
   params: Promise<{
@@ -105,7 +106,7 @@ export default async function TicketSelectionPage({ params }: TicketSelectionPag
   // Client Component'e data gönder
   // Redux'a kaydetme işlemi client-side yapılacak
   return (
-    <TicketSelectionClient
+    <TicketSelection
       event={event}
       session={session}
       categorySlug={categorySlug}

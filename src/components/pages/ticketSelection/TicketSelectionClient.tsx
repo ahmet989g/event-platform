@@ -13,6 +13,7 @@ import type { SessionWithRelations } from '@/types/session.types';
 import type { SessionInfo } from '@/store/features/ticket/ticketTypes';
 import QuantityLayout from './quantity/QuantityLayout';
 import { useReservationCleanup } from '@/lib/hooks/useReservationCleanup';
+import BlockLayout from './block/BlockLayout';
 
 interface TicketSelectionClientProps {
   event: Event & { category: { name: string; slug: string } };
@@ -84,15 +85,12 @@ export default function TicketSelectionClient({
         );
 
       case 'block':
-        // TODO: Blok seçimi
         return (
-          <div className="container mx-auto !px-0 py-12">
-            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-800 dark:bg-gray-900/50">
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                Blok seçimi yakında eklenecek...
-              </p>
-            </div>
-          </div>
+          <BlockLayout
+            session={session}
+            event={event}
+            categorySlug={categorySlug}
+          />
         );
 
       default:
