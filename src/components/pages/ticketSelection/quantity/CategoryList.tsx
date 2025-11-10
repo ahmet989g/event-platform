@@ -1,10 +1,12 @@
-"use client";
-
 /**
  * Category List
- * Session kategorilerini listeler (1.Kat, Öğrenci, vb.)
+ * Session kategorilerini listeler
+ * @description Simple and stable - no complex optimization
  */
 
+"use client";
+
+import { useAppSelector } from '@/store/hooks';
 import type { SessionCategoryWithTicketCategory } from '@/types/session.types';
 import CategoryCard from './CategoryCard';
 
@@ -13,6 +15,9 @@ interface CategoryListProps {
 }
 
 export default function CategoryList({ sessionCategories }: CategoryListProps) {
+  // Single selector - totalQuantity
+  const totalQuantity = useAppSelector((state) => state.ticket?.quantity.totalQuantity);
+
   // Aktif kategorileri filtrele
   const activeCategories = sessionCategories.filter((sc) => sc.is_active);
 
@@ -55,12 +60,13 @@ export default function CategoryList({ sessionCategories }: CategoryListProps) {
         </p>
       </div>
 
-      {/* Category Cards - Tek Kolon */}
+      {/* Category Cards */}
       <div className="space-y-4">
         {activeCategories.map((sessionCategory) => (
           <CategoryCard
             key={sessionCategory.id}
             sessionCategory={sessionCategory}
+            totalQuantity={totalQuantity}
           />
         ))}
       </div>

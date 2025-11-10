@@ -9,10 +9,9 @@ import {
   removeReservationItem,
   cancelReservation,
   completeReservation,
-  type CreateReservationParams,
-  type UpdateReservationItemParams,
 } from '@/utils/supabase/reservation-actions';
 import type { Reservation, ReservationItem } from '@/types/session.types';
+import { getErrorMessage } from '@/lib/helpers/getErrorMessage';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -112,10 +111,10 @@ export const createReservationThunk = createAsyncThunk<
 
       // Başarılı - Reservation döndür
       return result.data!;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in createReservationThunk:', error);
       return rejectWithValue({
-        message: error?.message || 'Beklenmeyen bir hata oluştu',
+        message: getErrorMessage(error, 'Beklenmeyen bir hata oluştu'),
       });
     }
   }
@@ -178,10 +177,10 @@ export const updateReservationItemThunk = createAsyncThunk<
         item: result.data!,
         availableCapacity: result.availableCapacity || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in updateReservationItemThunk:', error);
       return rejectWithValue({
-        message: error?.message || 'Beklenmeyen bir hata oluştu',
+        message: getErrorMessage(error, 'Beklenmeyen bir hata oluştu'),
       });
     }
   }
@@ -230,10 +229,10 @@ export const removeReservationItemThunk = createAsyncThunk<
       }
 
       // Başarılı (return void)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in removeReservationItemThunk:', error);
       return rejectWithValue({
-        message: error?.message || 'Beklenmeyen bir hata oluştu',
+        message: getErrorMessage(error, 'Beklenmeyen bir hata oluştu'),
       });
     }
   }
@@ -275,10 +274,10 @@ export const cancelReservationThunk = createAsyncThunk<
       }
 
       // Başarılı (return void)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in cancelReservationThunk:', error);
       return rejectWithValue({
-        message: error?.message || 'Beklenmeyen bir hata oluştu',
+        message: getErrorMessage(error, 'Beklenmeyen bir hata oluştu'),
       });
     }
   }
@@ -319,10 +318,10 @@ export const completeReservationThunk = createAsyncThunk<
       }
 
       // Başarılı (return void)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in completeReservationThunk:', error);
       return rejectWithValue({
-        message: error?.message || 'Beklenmeyen bir hata oluştu',
+        message: getErrorMessage(error, 'Beklenmeyen bir hata oluştu'),
       });
     }
   }

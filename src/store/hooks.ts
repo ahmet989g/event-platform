@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from './store';
 
 /**
- * !Neden Custom Hooks: TS state in yapısını bilmiyor autocomplete çalışmıyor! 
+ * ?Neden Custom Hooks: TS state in yapısını bilmiyor autocomplete çalışmıyor! 
  */
 
 /**
