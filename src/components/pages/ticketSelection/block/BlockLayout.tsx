@@ -29,6 +29,8 @@ export default async function BlockLayout({ session, event, categorySlug }: Bloc
   const dbBlocks = await getBlocks(session.id, false);
   const dbSeats = await getSeats({ session_id: session.id });
 
+  console.log('BlockLayout - Fetched blocks:', dbBlocks);
+
   // Error state
   if (!dbBlocks || !dbSeats) {
     return (

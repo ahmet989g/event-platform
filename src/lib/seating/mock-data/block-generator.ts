@@ -1,28 +1,55 @@
 /**
- * Block Generator
+ * Block Generator - Rectangle Football Stadium
  * Generate mock block data for stadium seating
- * @description Creates realistic block structures for 30K football stadium
+ * @description RECTANGLE blocks matching exact stadium layout
  */
 
 import { v4 as uuidv4 } from 'uuid';
 import type { Block, BlockGroup, BlockSection, BlockTier } from '@/types/seating/block.types';
-import type { ArcShape } from '@/types/seating/geometry.types';
+import type { RectangleShape } from '@/types/seating/geometry.types';
 import {
   STADIUM_DIMENSIONS,
-  BLOCK_RADII,
   PRICE_CATEGORIES,
-  CAPACITY_BREAKDOWN,
   SEATS_PER_BLOCK,
 } from './stadium-config';
-import { calculateArcPoints, getArcCenter } from './arc-calculator';
 
 // ============================================
-// BLOCK GENERATION
+// STADIUM LAYOUT CONSTANTS
 // ============================================
 
 /**
- * Tek bir blok oluştur
+ * Stadyum layout (senin görsele uygun)
+ * 
+ *     212 213 214 215 216 217 218 219 220  (KUZEY - 9 blok)
+ *   ┌─────────────────────────────────┐
+ *111│                                 │120
+ *110│                                 │121
+ *109│           [SAHA]                │122
+ *108│        (dikdörtgen)             │123
+ *107│                                 │124
+ *106│                                 │125
+ *105│                                 │126
+ *104│                                 │127
+ *   └─────────────────────────────────┘128
+ *     100 101 102 103 104 105 106 107  (GÜNEY - 8+ blok)
  */
+
+const FIELD = {
+  x: 400,
+  y: 300,
+  width: 600,
+  height: 400,
+};
+
+const BLOCK_DIMS = {
+  width: 80,
+  height: 120,
+};
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
 function createBlock(config: {
   sessionId: string;
   blockNumber: string;
@@ -30,12 +57,10 @@ function createBlock(config: {
   group: BlockGroup;
   section: BlockSection;
   tier: BlockTier;
-  arcConfig: {
-    startAngle: number;
-    endAngle: number;
-    innerRadius: number;
-    outerRadius: number;
-  };
+  x: number;
+  y: number;
+  width: number;
+  height: number;
   seatConfig: {
     rows: number;
     cols: number;
@@ -49,36 +74,27 @@ function createBlock(config: {
     group,
     section,
     tier,
-    arcConfig,
+    x,
+    y,
+    width,
+    height,
     seatConfig,
     displayOrder,
   } = config;
 
   const priceCategory = PRICE_CATEGORIES[group];
-  const { CENTER_X: centerX, CENTER_Y: centerY } = STADIUM_DIMENSIONS;
 
-  // Arc shape oluştur
-  const arcShape: ArcShape = {
-    type: 'arc',
-    centerX,
-    centerY,
-    innerRadius: arcConfig.innerRadius,
-    outerRadius: arcConfig.outerRadius,
-    startAngle: arcConfig.startAngle,
-    endAngle: arcConfig.endAngle,
+  const rectShape: RectangleShape = {
+    type: 'rectangle',
+    x,
+    y,
+    width,
+    height,
   };
 
-  // Blok merkezini hesapla
-  const blockCenter = getArcCenter({
-    centerX,
-    centerY,
-    innerRadius: arcConfig.innerRadius,
-    outerRadius: arcConfig.outerRadius,
-    startAngle: arcConfig.startAngle,
-    endAngle: arcConfig.endAngle,
-  });
+  const centerX = x + width / 2;
+  const centerY = y + height / 2;
 
-  // Toplam kapasite
   const totalCapacity = seatConfig.rows * seatConfig.cols;
 
   return {
@@ -86,7 +102,7 @@ function createBlock(config: {
     session_id: sessionId,
     block_number: blockNumber,
     block_name: blockName,
-    shape: arcShape,
+    shape: rectShape,
     style: {
       fill: priceCategory.color,
       stroke: '#FFFFFF',
@@ -94,15 +110,15 @@ function createBlock(config: {
       opacity: 0.9,
     },
     viewport_data: {
-      center: blockCenter,
-      zoomScale: 2.0, // Bu zoom'da koltuklar görünsün
+      center: { x: centerX, y: centerY },
+      zoomScale: 2.0,
       seatGrid: {
         rows: seatConfig.rows,
         cols: seatConfig.cols,
         rowSpacing: 10,
         colSpacing: 10,
-        startX: blockCenter.x - (seatConfig.cols * 10) / 2,
-        startY: blockCenter.y - (seatConfig.rows * 10) / 2,
+        startX: x + 10,
+        startY: y + 10,
         seatWidth: 8,
         seatHeight: 8,
       },
@@ -114,11 +130,11 @@ function createBlock(config: {
       section,
       tier,
       group,
-      isCorner: group.includes('corner'),
+      isCorner: false,
       isGoalSide: group.includes('goal'),
       viewQuality: getViewQuality(group),
       distanceToCenter: Math.sqrt(
-        Math.pow(blockCenter.x - centerX, 2) + Math.pow(blockCenter.y - centerY, 2)
+        Math.pow(centerX - 1000, 2) + Math.pow(centerY - 800, 2)
       ),
     },
     created_at: new Date().toISOString(),
@@ -126,15 +142,12 @@ function createBlock(config: {
   };
 }
 
-/**
- * View quality hesapla (1-5)
- */
 function getViewQuality(group: BlockGroup): 1 | 2 | 3 | 4 | 5 {
   if (group.includes('lower_center')) return 5;
   if (group.includes('upper_center')) return 4;
   if (group.includes('lower_corner')) return 4;
   if (group.includes('upper_corner')) return 3;
-  return 2; // Goal side
+  return 2;
 }
 
 // ============================================
@@ -142,150 +155,30 @@ function getViewQuality(group: BlockGroup): 1 | 2 | 3 | 4 | 5 {
 // ============================================
 
 /**
- * Doğu Alt bloklarını oluştur (101-110)
+ * DOĞU (Sağ) tribünleri - 120-128 (9 blok)
+ * Dikey dizilim
  */
-function generateEastLowerBlocks(sessionId: string): Block[] {
+function generateEastBlocks(sessionId: string): Block[] {
   const blocks: Block[] = [];
-  let displayOrder = 0;
+  const startX = FIELD.x + FIELD.width + 50; // Saha sağında
+  const startY = FIELD.y - 50;
 
-  // Köşe (Güney) - 101-103
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 9; i++) {
+    const blockNumber = `${120 + i}`;
     blocks.push(
       createBlock({
         sessionId,
-        blockNumber: `${101 + i}`,
-        blockName: `Doğu Alt Köşe - ${101 + i}`,
-        group: 'east_lower_corner',
-        section: 'east',
-        tier: 'lower',
-        arcConfig: {
-          startAngle: 0 + i * 8.3,
-          endAngle: 8.3 + i * 8.3,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.lower_corner,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  // Merkez - 104-107
-  for (let i = 0; i < 4; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${104 + i}`,
-        blockName: `Doğu Alt Orta - ${104 + i}`,
-        group: 'east_lower_center',
-        section: 'east',
-        tier: 'lower',
-        arcConfig: {
-          startAngle: 25 + i * 10,
-          endAngle: 35 + i * 10,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.lower_center,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  // Köşe (Kuzey) - 108-110
-  for (let i = 0; i < 3; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${108 + i}`,
-        blockName: `Doğu Alt Köşe - ${108 + i}`,
-        group: 'east_lower_corner',
-        section: 'east',
-        tier: 'lower',
-        arcConfig: {
-          startAngle: 65 + i * 8.3,
-          endAngle: 73.3 + i * 8.3,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.lower_corner,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  return blocks;
-}
-
-/**
- * Doğu Üst bloklarını oluştur (120-130)
- */
-function generateEastUpperBlocks(sessionId: string): Block[] {
-  const blocks: Block[] = [];
-  let displayOrder = 100;
-
-  // Köşe (Güney) - 120-122
-  for (let i = 0; i < 3; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${120 + i}`,
-        blockName: `Doğu Üst Köşe - ${120 + i}`,
-        group: 'east_upper_corner',
-        section: 'east',
-        tier: 'upper',
-        arcConfig: {
-          startAngle: 0 + i * 8.3,
-          endAngle: 8.3 + i * 8.3,
-          innerRadius: BLOCK_RADII.UPPER_INNER,
-          outerRadius: BLOCK_RADII.UPPER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.upper_corner,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  // Merkez - 123-127
-  for (let i = 0; i < 5; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${123 + i}`,
-        blockName: `Doğu Üst Orta - ${123 + i}`,
+        blockNumber,
+        blockName: `Doğu - ${blockNumber}`,
         group: 'east_upper_center',
         section: 'east',
         tier: 'upper',
-        arcConfig: {
-          startAngle: 25 + i * 8,
-          endAngle: 33 + i * 8,
-          innerRadius: BLOCK_RADII.UPPER_INNER,
-          outerRadius: BLOCK_RADII.UPPER_OUTER,
-        },
+        x: startX,
+        y: startY + i * (BLOCK_DIMS.height + 5),
+        width: BLOCK_DIMS.width,
+        height: BLOCK_DIMS.height,
         seatConfig: SEATS_PER_BLOCK.upper_center,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  // Köşe (Kuzey) - 128-130
-  for (let i = 0; i < 3; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${128 + i}`,
-        blockName: `Doğu Üst Köşe - ${128 + i}`,
-        group: 'east_upper_corner',
-        section: 'east',
-        tier: 'upper',
-        arcConfig: {
-          startAngle: 65 + i * 8.3,
-          endAngle: 73.3 + i * 8.3,
-          innerRadius: BLOCK_RADII.UPPER_INNER,
-          outerRadius: BLOCK_RADII.UPPER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.upper_corner,
-        displayOrder: displayOrder++,
+        displayOrder: 100 + i,
       })
     );
   }
@@ -294,30 +187,30 @@ function generateEastUpperBlocks(sessionId: string): Block[] {
 }
 
 /**
- * Güney (Kale Arkası) bloklarını oluştur
+ * GÜNEY (Alt) tribünleri - 100-111 (12 blok)
+ * Yatay dizilim
  */
-function generateSouthGoalBlocks(sessionId: string): Block[] {
+function generateSouthBlocks(sessionId: string): Block[] {
   const blocks: Block[] = [];
-  const displayOrder = 200;
+  const startX = FIELD.x - 50;
+  const startY = FIELD.y + FIELD.height + 50; // Saha altında
 
-  // 3 büyük blok (228-230)
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 12; i++) {
+    const blockNumber = `${100 + i}`;
     blocks.push(
       createBlock({
         sessionId,
-        blockNumber: `${228 + i}`,
-        blockName: `Güney Kale Arkası - ${228 + i}`,
+        blockNumber,
+        blockName: `Güney - ${blockNumber}`,
         group: 'south_goal',
         section: 'south',
         tier: 'lower',
-        arcConfig: {
-          startAngle: 90 + i * 30,
-          endAngle: 120 + i * 30,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
+        x: startX + i * (BLOCK_DIMS.width + 5),
+        y: startY,
+        width: BLOCK_DIMS.width,
+        height: BLOCK_DIMS.height,
         seatConfig: SEATS_PER_BLOCK.goal_side,
-        displayOrder: displayOrder + i,
+        displayOrder: 200 + i,
       })
     );
   }
@@ -326,74 +219,30 @@ function generateSouthGoalBlocks(sessionId: string): Block[] {
 }
 
 /**
- * Batı Alt bloklarını oluştur (212-220)
+ * BATI (Sol) tribünleri - 104-111 (8 blok)
+ * Dikey dizilim
  */
-function generateWestLowerBlocks(sessionId: string): Block[] {
+function generateWestBlocks(sessionId: string): Block[] {
   const blocks: Block[] = [];
-  let displayOrder = 300;
+  const startX = FIELD.x - BLOCK_DIMS.width - 100; // Saha solunda
+  const startY = FIELD.y;
 
-  // Köşe (Güney) - 212-214
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 8; i++) {
+    const blockNumber = `${104 + i}`;
     blocks.push(
       createBlock({
         sessionId,
-        blockNumber: `${212 + i}`,
-        blockName: `Batı Alt Köşe - ${212 + i}`,
-        group: 'west_lower_corner',
-        section: 'west',
-        tier: 'lower',
-        arcConfig: {
-          startAngle: 180 + i * 8.3,
-          endAngle: 188.3 + i * 8.3,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.lower_corner,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  // Merkez - 215-218
-  for (let i = 0; i < 4; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${215 + i}`,
-        blockName: `Batı Alt Orta - ${215 + i}`,
+        blockNumber,
+        blockName: `Batı - ${blockNumber}`,
         group: 'west_lower_center',
         section: 'west',
         tier: 'lower',
-        arcConfig: {
-          startAngle: 205 + i * 10,
-          endAngle: 215 + i * 10,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
+        x: startX,
+        y: startY + i * (BLOCK_DIMS.height + 5),
+        width: BLOCK_DIMS.width,
+        height: BLOCK_DIMS.height,
         seatConfig: SEATS_PER_BLOCK.lower_center,
-        displayOrder: displayOrder++,
-      })
-    );
-  }
-
-  // Köşe (Kuzey) - 219-220
-  for (let i = 0; i < 2; i++) {
-    blocks.push(
-      createBlock({
-        sessionId,
-        blockNumber: `${219 + i}`,
-        blockName: `Batı Alt Köşe - ${219 + i}`,
-        group: 'west_lower_corner',
-        section: 'west',
-        tier: 'lower',
-        arcConfig: {
-          startAngle: 245 + i * 12.5,
-          endAngle: 257.5 + i * 12.5,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
-        seatConfig: SEATS_PER_BLOCK.lower_corner,
-        displayOrder: displayOrder++,
+        displayOrder: 300 + i,
       })
     );
   }
@@ -402,35 +251,55 @@ function generateWestLowerBlocks(sessionId: string): Block[] {
 }
 
 /**
- * Kuzey (Kale Arkası) bloklarını oluştur
+ * KUZEY (Üst) tribünleri - 212-220 (9 blok)
+ * Yatay dizilim
  */
-function generateNorthGoalBlocks(sessionId: string): Block[] {
+function generateNorthBlocks(sessionId: string): Block[] {
   const blocks: Block[] = [];
-  const displayOrder = 400;
+  const startX = FIELD.x;
+  const startY = FIELD.y - BLOCK_DIMS.height - 100; // Saha üstünde
 
-  // 3 büyük blok (113-115)
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 9; i++) {
+    const blockNumber = `${212 + i}`;
     blocks.push(
       createBlock({
         sessionId,
-        blockNumber: `${113 + i}`,
-        blockName: `Kuzey Kale Arkası - ${113 + i}`,
+        blockNumber,
+        blockName: `Kuzey - ${blockNumber}`,
         group: 'north_goal',
         section: 'north',
         tier: 'lower',
-        arcConfig: {
-          startAngle: 270 + i * 30,
-          endAngle: 300 + i * 30,
-          innerRadius: BLOCK_RADII.LOWER_INNER,
-          outerRadius: BLOCK_RADII.LOWER_OUTER,
-        },
+        x: startX + i * (BLOCK_DIMS.width + 5),
+        y: startY,
+        width: BLOCK_DIMS.width,
+        height: BLOCK_DIMS.height,
         seatConfig: SEATS_PER_BLOCK.goal_side,
-        displayOrder: displayOrder + i,
+        displayOrder: 400 + i,
       })
     );
   }
 
   return blocks;
+}
+
+/**
+ * SAHA block'u oluştur (ortadaki yeşil alan)
+ */
+function generateFieldBlock(sessionId: string): Block {
+  return createBlock({
+    sessionId,
+    blockNumber: 'SAHA',
+    blockName: 'Saha',
+    group: 'south_goal', // Dummy group
+    section: 'south',
+    tier: 'lower',
+    x: FIELD.x,
+    y: FIELD.y,
+    width: FIELD.width,
+    height: FIELD.height,
+    seatConfig: { rows: 0, cols: 0 },
+    displayOrder: 0,
+  });
 }
 
 // ============================================
@@ -439,29 +308,22 @@ function generateNorthGoalBlocks(sessionId: string): Block[] {
 
 /**
  * Tüm stadyum bloklarını oluştur
- * @param sessionId - Session UUID
- * @returns Tüm bloklar
+ * RECTANGLE football stadium (38 blocks + 1 field)
  */
 export function generateStadiumBlocks(sessionId: string): Block[] {
   return [
-    ...generateEastLowerBlocks(sessionId),
-    ...generateEastUpperBlocks(sessionId),
-    ...generateSouthGoalBlocks(sessionId),
-    ...generateWestLowerBlocks(sessionId),
-    ...generateNorthGoalBlocks(sessionId),
+    ...generateEastBlocks(sessionId),    // 9 blok (120-128)
+    ...generateSouthBlocks(sessionId),   // 12 blok (100-111)
+    ...generateWestBlocks(sessionId),    // 8 blok (104-111)
+    ...generateNorthBlocks(sessionId),   // 9 blok (212-220)
+    // generateFieldBlock(sessionId),     // Saha (isteğe bağlı)
   ];
 }
 
-/**
- * Blok sayısını hesapla
- */
 export function getBlockCount(): number {
-  return Object.values(CAPACITY_BREAKDOWN).reduce((sum, count) => sum + count, 0);
+  return 38; // 9 + 12 + 8 + 9
 }
 
-/**
- * Toplam kapasiteyi hesapla
- */
 export function getTotalCapacity(blocks: Block[]): number {
   return blocks.reduce((sum, block) => sum + block.total_capacity, 0);
 }

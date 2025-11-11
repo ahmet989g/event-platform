@@ -73,19 +73,23 @@ export function BlockCanvas({
   showLegend = true,
   showBlockLabels = true,
   showCapacity = false,
-  backgroundColor = '#ffffff',
+  backgroundColor = '#1a1a1a',
 }: BlockCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
   const [hoveredSeatId, setHoveredSeatId] = useState<string | null>(null);
   const selectedSeatIdsSet = new Set(selectedSeatIds);
 
+  // Calculate bounds and initial viewport
+  const bounds = calculateSceneBounds(blocks);
+  const initialViewport = calculateInitialViewport(bounds, width, height);
+
   // Viewport management
   const viewport = useViewport(width, height, {
-    minZoom: 0.5,
+    minZoom: 0.1,
     maxZoom: 10,
-    initialZoom: 1,
-    initialCenter: { x: 0, y: 0 },
+    initialZoom: initialViewport.zoom,
+    initialCenter: initialViewport.center,
   });
 
   // ============================================
@@ -106,8 +110,17 @@ export function BlockCanvas({
     ctx.save();
     applyViewportTransform(ctx, viewport.viewport);
 
-    // Render blocks
-    renderBlocks(ctx, blocks, {
+    // Filter out stage/field blocks - sadece tribünleri render et
+    const seatingBlocks = blocks.filter(
+      (block) =>
+        block.block_name.toLowerCase() !== 'sahne' &&
+        block.block_name.toLowerCase() !== 'stage' &&
+        block.block_name.toLowerCase() !== 'field' &&
+        block.block_name.toLowerCase() !== 'saha'
+    );
+
+    // Render blocks (tribünler)
+    renderBlocks(ctx, seatingBlocks, {
       selectedBlockId,
       hoveredBlockId,
       showLabel: showBlockLabels,
@@ -115,9 +128,35 @@ export function BlockCanvas({
       currentZoom: viewport.viewport.scale,
     });
 
+    // Render stage/field label (basit text olarak)
+    const stageBlock = blocks.find(
+      (block) =>
+        block.block_name.toLowerCase() === 'sahne' ||
+        block.block_name.toLowerCase() === 'stage' ||
+        block.block_name.toLowerCase() === 'field' ||
+        block.block_name.toLowerCase() === 'saha'
+    );
+    if (stageBlock) {
+      renderStageLabel(ctx, stageBlock);
+    }
+
     // Render seats (only if zoomed in)
     if (viewport.viewport.scale > 1.5) {
-      renderSeats(ctx, seats, {
+      // Filter out stage seats
+      const seatingSeats = seats.filter((seat) => {
+        const block = blocks.find((b) => b.id === seat.block_id);
+        if (!block) return true;
+
+        const blockName = block.block_name.toLowerCase();
+        return (
+          blockName !== 'sahne' &&
+          blockName !== 'stage' &&
+          blockName !== 'field' &&
+          blockName !== 'saha'
+        );
+      });
+
+      renderSeats(ctx, seatingSeats, {
         selectedSeatIds: selectedSeatIdsSet,
         hoveredSeatId,
         currentZoom: viewport.viewport.scale,
@@ -192,7 +231,16 @@ export function BlockCanvas({
 
       // Check block click (only if not zoomed in too much)
       if (viewport.viewport.scale < 3 && onBlockSelect) {
-        const clickedBlock = findBlockAtPoint(blocks, worldPos);
+        // Filter out stage blocks from click detection
+        const seatingBlocks = blocks.filter(
+          (block) =>
+            block.block_name.toLowerCase() !== 'sahne' &&
+            block.block_name.toLowerCase() !== 'stage' &&
+            block.block_name.toLowerCase() !== 'field' &&
+            block.block_name.toLowerCase() !== 'saha'
+        );
+
+        const clickedBlock = findBlockAtPoint(seatingBlocks, worldPos);
         if (clickedBlock) {
           onBlockSelect(clickedBlock.id);
 
@@ -205,7 +253,21 @@ export function BlockCanvas({
 
       // Check seat click (only if zoomed in)
       if (viewport.viewport.scale > 2 && onSeatSelect) {
-        const clickedSeat = findSeatAtPoint(seats, worldPos);
+        // Filter out stage seats from click detection
+        const seatingSeats = seats.filter((seat) => {
+          const block = blocks.find((b) => b.id === seat.block_id);
+          if (!block) return true;
+
+          const blockName = block.block_name.toLowerCase();
+          return (
+            blockName !== 'sahne' &&
+            blockName !== 'stage' &&
+            blockName !== 'field' &&
+            blockName !== 'saha'
+          );
+        });
+
+        const clickedSeat = findSeatAtPoint(seatingSeats, worldPos);
         if (clickedSeat && clickedSeat.status === 'available') {
           onSeatSelect(clickedSeat.id);
         }
@@ -232,13 +294,36 @@ export function BlockCanvas({
 
       // Block hover (low zoom)
       if (viewport.viewport.scale < 3) {
-        const hoveredBlock = findBlockAtPoint(blocks, worldPos);
+        // Filter out stage blocks from hover detection
+        const seatingBlocks = blocks.filter(
+          (block) =>
+            block.block_name.toLowerCase() !== 'sahne' &&
+            block.block_name.toLowerCase() !== 'stage' &&
+            block.block_name.toLowerCase() !== 'field' &&
+            block.block_name.toLowerCase() !== 'saha'
+        );
+
+        const hoveredBlock = findBlockAtPoint(seatingBlocks, worldPos);
         setHoveredBlockId(hoveredBlock?.id || null);
         setHoveredSeatId(null);
       }
       // Seat hover (high zoom)
       else if (viewport.viewport.scale > 2) {
-        const hoveredSeat = findSeatAtPoint(seats, worldPos);
+        // Filter out stage seats from hover detection
+        const seatingSeats = seats.filter((seat) => {
+          const block = blocks.find((b) => b.id === seat.block_id);
+          if (!block) return true;
+
+          const blockName = block.block_name.toLowerCase();
+          return (
+            blockName !== 'sahne' &&
+            blockName !== 'stage' &&
+            blockName !== 'field' &&
+            blockName !== 'saha'
+          );
+        });
+
+        const hoveredSeat = findSeatAtPoint(seatingSeats, worldPos);
         setHoveredSeatId(hoveredSeat?.id || null);
         setHoveredBlockId(null);
       }
@@ -316,9 +401,15 @@ export function BlockCanvas({
         </button>
 
         <button
-          onClick={viewport.resetView}
+          onClick={() => {
+            viewport.zoomToPoint(
+              initialViewport.center.x,
+              initialViewport.center.y,
+              initialViewport.zoom
+            );
+          }}
           className="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg shadow-lg transition-colors"
-          title="Reset View"
+          title="Fit to Screen"
         >
           <svg
             className="w-5 h-5"
@@ -330,7 +421,7 @@ export function BlockCanvas({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
             />
           </svg>
         </button>
@@ -365,6 +456,142 @@ export function BlockCanvas({
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
+
+/**
+ * Sahne bounds hesapla (tüm blockları kapsayan alan)
+ */
+function calculateSceneBounds(blocks: Block[]): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+} {
+  if (blocks.length === 0) {
+    return {
+      minX: -500,
+      minY: -500,
+      maxX: 500,
+      maxY: 500,
+      width: 1000,
+      height: 1000,
+      centerX: 0,
+      centerY: 0,
+    };
+  }
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  blocks.forEach((block) => {
+    if (block.shape.type === 'arc') {
+      const { centerX, centerY, outerRadius } = block.shape;
+      minX = Math.min(minX, centerX - outerRadius);
+      minY = Math.min(minY, centerY - outerRadius);
+      maxX = Math.max(maxX, centerX + outerRadius);
+      maxY = Math.max(maxY, centerY + outerRadius);
+    } else if (block.shape.type === 'polygon') {
+      block.shape.points.forEach((p) => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+    } else if (block.shape.type === 'rectangle') {
+      const { x, y, width, height } = block.shape;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + width);
+      maxY = Math.max(maxY, y + height);
+    } else if (block.shape.type === 'circle') {
+      const { centerX, centerY, radius } = block.shape;
+      minX = Math.min(minX, centerX - radius);
+      minY = Math.min(minY, centerY - radius);
+      maxX = Math.max(maxX, centerX + radius);
+      maxY = Math.max(maxY, centerY + radius);
+    }
+  });
+
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
+  return { minX, minY, maxX, maxY, width, height, centerX, centerY };
+}
+
+/**
+ * Initial viewport hesapla (fit to screen)
+ */
+function calculateInitialViewport(
+  bounds: ReturnType<typeof calculateSceneBounds>,
+  canvasWidth: number,
+  canvasHeight: number
+): {
+  center: { x: number; y: number };
+  zoom: number;
+} {
+  // Add padding (10%)
+  const padding = 1.1;
+  const sceneWidth = bounds.width * padding;
+  const sceneHeight = bounds.height * padding;
+
+  // Calculate zoom to fit
+  const zoomX = canvasWidth / sceneWidth;
+  const zoomY = canvasHeight / sceneHeight;
+  const zoom = Math.min(zoomX, zoomY);
+
+  return {
+    center: { x: bounds.centerX, y: bounds.centerY },
+    zoom: Math.max(0.1, Math.min(zoom, 2)), // Clamp between 0.1 and 2
+  };
+}
+
+/**
+ * Sahne/Saha label'ı çiz (basit text)
+ */
+function renderStageLabel(ctx: CanvasRenderingContext2D, block: Block): void {
+  const center = getBlockCenter(block);
+
+  // Stage area background (optional, very subtle)
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 2;
+
+  // Simple rectangle for stage
+  if (block.shape.type === 'rectangle') {
+    const { x, y, width, height } = block.shape;
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeRect(x, y, width, height);
+  } else if (block.shape.type === 'circle') {
+    const { centerX, centerY, radius } = block.shape;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Stage text
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 4;
+  ctx.font = 'bold 48px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Stroke (outline)
+  ctx.strokeText(block.block_name, center.x, center.y);
+  // Fill (main text)
+  ctx.fillText(block.block_name, center.x, center.y);
+
+  ctx.restore();
+}
 
 /**
  * Loading overlay çiz

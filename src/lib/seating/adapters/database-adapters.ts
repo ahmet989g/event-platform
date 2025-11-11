@@ -11,6 +11,8 @@ import type { Block as LegacyBlock, Seat as LegacySeat } from '@/types/session.t
 // ============================================
 // BLOCK ADAPTERS
 // ============================================
+/** Derece to Radyan dönüşüm */
+const DEG_TO_RAD = Math.PI / 180;
 
 /**
  * Yeni Block type'ı database format'ına çevir
@@ -121,8 +123,8 @@ export function adaptBlockFromDatabase(legacyBlock: LegacyBlock): NewBlock {
         centerY: legacyBlock.position_y,
         innerRadius: shape_data.innerRadius!,
         outerRadius: shape_data.outerRadius!,
-        startAngle: shape_data.startAngle!,
-        endAngle: shape_data.endAngle!,
+        startAngle: shape_data.startAngle * DEG_TO_RAD,
+        endAngle: shape_data.endAngle * DEG_TO_RAD,
       };
       break;
 
