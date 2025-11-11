@@ -1,7 +1,6 @@
 import { SessionWithRelations } from '@/types/session.types';
 import React from 'react'
 import QuantityLayout from './quantity/QuantityLayout';
-import BlockLayout from './block/BlockLayout';
 import { Category } from '@/types/database.types';
 
 interface TicketSelectionProps {
@@ -24,12 +23,12 @@ const TicketSelection = ({ event, session, categorySlug }: TicketSelectionProps)
         );
       case 'block':
         return (
-          <BlockLayout
-            session={session}
-            event={event}
-            categorySlug={categorySlug}
-          />
+          <div>BLOCK</div>
         );
+      case 'seat_map':
+        return (
+          <div>SEATMAP</div>
+        )
     }
   }
 
