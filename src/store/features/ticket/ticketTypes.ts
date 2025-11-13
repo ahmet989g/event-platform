@@ -1,4 +1,4 @@
-import type { LayoutType, SessionStatus } from '@/types/session.types';
+import type { Block, LayoutType, Seat, SessionStatus } from '@/types/session.types';
 
 /**
  * Session bilgisi (Redux'ta tutulacak minimal data)
@@ -32,7 +32,6 @@ export interface QuantityCategory {
 
 /**
  * Rezervasyon bilgisi
- * ⚠️ GÜNCEL - Phase 2 için isLoading, error, reservationId eklendi
  */
 export interface ReservationInfo {
   reservationId: string | null; // Backend'den dönen reservation ID
@@ -51,6 +50,47 @@ export interface QuantityState {
   totalQuantity: number;
 }
 
+// ============================================
+// BLOCK LAYOUT TYPES (YENİ)
+// ============================================
+
+/**
+ * Block seçimli - Seçili koltuk bilgisi
+ */
+export interface SelectedBlockSeat {
+  seatId: string;
+  blockId: string;
+  blockNumber: string;
+  blockName: string;
+  rowLabel: string;
+  seatNumber: string;
+  price: number;
+  color: string;
+}
+
+/**
+ * Block Layout State
+ */
+export interface BlockState {
+  // Canvas state
+  zoom: number; // 0.5 - 8
+  pan: { x: number; y: number };
+
+  // Data
+  blocks: Block[];
+  seats: Record<string, Seat[]>;
+
+  // Selection
+  selectedSeats: SelectedBlockSeat[];
+  hoveredBlockId: string | null;
+  hoveredSeatId: string | null;
+
+  // UI State
+  isLoadingBlocks: boolean;
+  isLoadingSeats: Record<string, boolean>; // blockId → loading state
+  error: string | null;
+}
+
 /**
  * Ana Ticket State
  */
@@ -66,8 +106,8 @@ export interface TicketState {
   // TODO: Seat map layout
   // seatMap: SeatMapState;
   
-  // TODO: Block layout
-  // block: BlockState;
+  // Block layout
+  block: BlockState;
 }
 
 /**
@@ -87,6 +127,18 @@ export const initialTicketState: TicketState = {
     selectedCategories: [],
     totalPrice: 0,
     totalQuantity: 0,
+  },
+  block: {
+    zoom: 1,
+    pan: { x: 0, y: 0 },
+    blocks: [],
+    seats: {},
+    selectedSeats: [],
+    hoveredBlockId: null,
+    hoveredSeatId: null,
+    isLoadingBlocks: false,
+    isLoadingSeats: {},
+    error: null,
   },
 };
 

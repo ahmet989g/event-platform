@@ -105,6 +105,8 @@ export default async function TicketSelectionPage({ params }: TicketSelectionPag
 
   // Client Component'e data gönder
   // Redux'a kaydetme işlemi client-side yapılacak
+
+  console.log('Rendering TicketSelection with session:', session);
   return (
     <TicketSelection
       event={event}

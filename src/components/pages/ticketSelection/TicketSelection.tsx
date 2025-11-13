@@ -2,16 +2,20 @@ import { SessionWithRelations } from '@/types/session.types';
 import React from 'react'
 import QuantityLayout from './quantity/QuantityLayout';
 import { Category } from '@/types/database.types';
+import BlockLayout from './block/blockLayout';
+import { getBlocksBySessionId } from '@/utils/supabase/block-queries';
 
 interface TicketSelectionProps {
-  event: Event & { category: Category };
   session: SessionWithRelations;
+  event: Event & {
+    category: { name: string; slug: string };
+  };
   categorySlug: string;
 }
 
-const TicketSelection = ({ event, session, categorySlug }: TicketSelectionProps) => {
+const TicketSelection = ({ session, event, categorySlug }: TicketSelectionProps) => {
 
-  const renderLayout = () => {
+  const renderLayout = async () => {
     switch (session.layout_type) {
       case 'quantity':
         return (
@@ -22,8 +26,15 @@ const TicketSelection = ({ event, session, categorySlug }: TicketSelectionProps)
           />
         );
       case 'block':
+        const blocks = await getBlocksBySessionId(session.id);
+        console.log('Blocks for session', session.id, blocks);
         return (
-          <div>BLOCK</div>
+          <BlockLayout
+            session={session}
+            event={event}
+            categorySlug={categorySlug}
+            blocks={blocks}
+          />
         );
       case 'seat_map':
         return (

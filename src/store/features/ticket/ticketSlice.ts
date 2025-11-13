@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { initialTicketState } from './ticketTypes';
 import { baseReducers } from './reducers/baseReducers';
 import { quantityReducers } from './reducers/quantityReducers';
+import { blockReducers } from './reducers/blockReducers';
 
 // Thunk'ları import et
 import {
@@ -29,8 +30,7 @@ const ticketSlice = createSlice({
     // TODO: Koltuk seçimli layout
     // ...seatMapReducers,
 
-    // TODO: Blok seçimli layout
-    // ...blockReducers,
+    ...blockReducers,
   },
 
   // ============================================
@@ -171,6 +171,21 @@ export const {
   removeCategory,
   updateQuantity,
   clearQuantitySelection,
+
+  // Block actions
+  setZoom,
+  setPan,
+  setBlocks,
+  setBlocksLoading,
+  setBlockSeats,
+  setSeatsLoading,
+  toggleSeat,
+  updateSeatStatus,
+  setHoveredBlock,
+  setHoveredSeat,
+  clearBlockSelection,
+  resetBlockState,
+  setBlockError,
 } = ticketSlice.actions;
 
 
