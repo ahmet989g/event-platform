@@ -30,7 +30,7 @@ export function drawBlock(
   const { isHovered = false, isSelected = false, zoom } = options;
 
   // Koordinatları parse et
-  const coordinates = parseCoordinates(block.shape_data?.coordinates);
+  const coordinates = parseCoordinates(block.coordinates);
   
   if (coordinates.length === 0) {
     console.warn(`Block ${block.block_number} has no valid coordinates`);
@@ -48,12 +48,16 @@ export function drawBlock(
   path.closePath();
 
   // Fill color (hover/selected durumuna göre)
-  let fillColor = block.color || '#6b7280';
+  let fillColor = block.fill_color || '#6b7280';
   
   if (isSelected) {
-    fillColor = adjustColor(fillColor, 40); // Daha açık
+    fillColor = adjustColor(fillColor, 40);
   } else if (isHovered) {
-    fillColor = adjustColor(fillColor, 20); // Biraz açık
+    fillColor = adjustColor(fillColor, 20);
+  }
+  
+  if (zoom > 2.5) {
+    fillColor = fillColor+'30';
   }
 
   // Fill

@@ -66,14 +66,14 @@ export type ReservationStatus = (typeof ReservationStatus)[keyof typeof Reservat
 /**
  * Blok geometri tipi
  */
-export const BlockGeometryType = {
+export const BlockShapeType = {
   RECTANGLE: 'rectangle',  // Dikdörtgen
   POLYGON: 'polygon',      // Çokgen
   CIRCLE: 'circle',        // Daire
   ARC: 'arc',              // Yay (stadyum tribünleri için)
   CUSTOM: 'custom',        // Özel SVG path
 } as const;
-export type BlockGeometryType = (typeof BlockGeometryType)[keyof typeof BlockGeometryType];
+export type BlockShapeType = (typeof BlockShapeType)[keyof typeof BlockShapeType];
 
 // ============================================
 // DATABASE INTERFACES
@@ -226,11 +226,13 @@ export interface ViewportData {
 export interface Block {
   id: string;
   session_id: string;
-  name: string;
-  color: string;
+  block_name: string;
+  block_number: string;
+  fill_color: string;
   total_capacity: number;
+  coordinates: string; // Orijinal koordinat verisi (JSON string)
   available_capacity: number;
-  geometry_type: BlockGeometryType;
+  shape_type: BlockShapeType;
   shape_data: ShapeData;
   position_x: number;
   position_y: number;

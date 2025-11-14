@@ -63,8 +63,6 @@ export default function BlockCanvas({ sessionId, blocks }: BlockCanvasProps) {
     (state) => state.ticket.block
   );
 
-  console.log('blocks in BlockCanvas:', blocks);
-
   // Local state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -100,10 +98,12 @@ export default function BlockCanvas({ sessionId, blocks }: BlockCanvasProps) {
    */
   const loadBlockSeats = useCallback(async (blockId: string) => {
     // Zaten yüklü mü?
+    console.log('loadSeats', seats)
     if (seats[blockId]) return;
 
     try {
       dispatch(setSeatsLoading({ blockId, loading: true }));
+      // API çağrısı ile koltukları al
 
 
       //dispatch(setBlockSeats({ blockId, seats: data.seats || [] }));
@@ -156,6 +156,7 @@ export default function BlockCanvas({ sessionId, blocks }: BlockCanvasProps) {
     // 4. Seats (zoom > 2.5 ve koltuklar yüklü ise)
     if (zoom > 2.5) {
       blocks.forEach((block) => {
+        console.log('Show Seat', seats)
         if (seats[block.id]) {
           drawSeats(ctx, block, seats[block.id]);
         }
@@ -211,7 +212,6 @@ export default function BlockCanvas({ sessionId, blocks }: BlockCanvasProps) {
    */
   const drawSeats = (ctx: CanvasRenderingContext2D, block: Block, blockSeats: Seat[]) => {
     const selectedSeatIds = new Set(selectedSeats.map((s) => s.seatId));
-
     drawBlockSeatsUtil(ctx, block, blockSeats, {
       selectedSeatIds,
       hoveredSeatId, // Hover effect için

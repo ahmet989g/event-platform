@@ -74,7 +74,7 @@ export default function BlockLayout({
   useReservationCleanup();
 
   return (
-    <div className="container mx-auto !px-0 py-8">
+    <div className="container mx-auto !px-0 py-8 max-h-[850px] overflow-hidden">
       {/* Breadcrumb / Header */}
       <div className="mb-8">
         {/* Breadcrumb */}
